@@ -8,6 +8,9 @@
 #include <string.h>
 #include "personaje.h"
 #include "mapa.h"
+#include "balas.h"
+#include "enemigos.h"
+
 
 
 // estructuras---------------------------
@@ -27,48 +30,66 @@ int cargar_mapa(const char* ruta);
 
 // -----------main--------------------
 int main() {
+    
     flujo_juego mijuego;
 
-  
-
+    
     if (!inicializar_sistema(&mijuego)) {
         fprintf(stderr, "Error");
         return -1;
     }
 
     cargar_mapa("mapa.txt");
-  float camara = (mapa_filas * largo_v) - 600.0f;
 
-    // Inicializamos a nuestro protagonista
-    //personaje jugador = { 375, 800, 50, 5.0, 6.0 }; // x, y, tamano, velocidad
    
-  personaje jugador = { 375, (mapa_filas * largo_v) - 100.0f, 30, 5.0, 6.0 };
+
+    personaje jugador;
+    spawn_personaje(&jugador);
+    spawn_enemigos();
+    float camara = jugador.y - 300;
+
+    //personaje jugador = { 375, (mapa_filas * largo_v) - 100.0f, 30, 5.0, 6.0 };
 
     bool corriendo = true;
     bool redibujar = true;
 
     while (corriendo) {
         ALLEGRO_EVENT event;
-        al_wait_for_event(mijuego.queue, &event); 
+        al_wait_for_event(mijuego.queue, &event);
 
         // Detectar si cerramos la ventana
-        if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE) { 
+        if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
             corriendo = false;
         }
-        else if (event.type == ALLEGRO_EVENT_TIMER) { 
+        else if (event.type == ALLEGRO_EVENT_TIMER) {
 
             fisicas(&jugador);
-            if (jugador.y < camara + 100.0f) {  
-                camara = jugador.y - 100.0f;
+            float objetivo_camara = jugador.y - 300.0f;
+            if (objetivo_camara < camara) {
+                camara = objetivo_camara;
             }
-
+            //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////actualizar_bala();
+            fisicas_balas();
+            revisar_colisione_bala_enemigo();
             redibujar = true;
+        }
+        else if (event.type == ALLEGRO_EVENT_KEY_DOWN) {
+            event.keyboard.keycode;
+            if (event.keyboard.keycode == ALLEGRO_KEY_LSHIFT) {
+                disparar(&jugador);
+            }
+            if (event.keyboard.keycode == ALLEGRO_KEY_SPACE) {
+                saltar(&jugador);
+            }
         }
 
         if (redibujar && al_is_event_queue_empty(mijuego.queue)) {
             al_clear_to_color(al_map_rgb(0, 0, 0));
             dibujar_mapa(camara);
+            dibujar_enemigos_mapa(camara);   
+            dibujar_balas_mapa(camara);
             dibujo_personaje(&jugador, camara);
+            
             al_flip_display();
             redibujar = false;
         }
@@ -77,6 +98,7 @@ int main() {
 
     return 0;
 }
+
 
 
 //funciones----------------------------
@@ -89,7 +111,7 @@ bool inicializar_sistema(flujo_juego* j) {
     al_install_keyboard();
     al_init_primitives_addon();
 
-    j->display = al_create_display(800, 600);
+    j->display = al_create_display(800, 800);
     if (!j->display) return false;
 
     j->timer = al_create_timer(1.0 / 60.0);
