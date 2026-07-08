@@ -3,6 +3,7 @@
 #include <allegro5/allegro_ttf.h>
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_physfs.h>
+#include <allegro5/allegro_image.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
@@ -39,6 +40,20 @@ int main() {
         return -1;
     }
 
+    if (!cargar_sprites_mapa()) {
+        return -1;
+    }
+
+    if (!cargar_sprites_personaje()) {
+        liberar_sprites_mapa();
+        cerrar_sistema(&mijuego);
+        return -1;
+    }
+
+    if (cargar_sprites_enemigos() == false) {
+        return -1;
+    }
+
     cargar_mapa("mapa.txt");
 
    
@@ -46,7 +61,8 @@ int main() {
     personaje jugador;
     spawn_personaje(&jugador);
     spawn_enemigos();
-    float camara = jugador.y - 300;
+    float camara_x = 0.0f;
+    float camara_y = 0.0f;
 
     //personaje jugador = { 375, (mapa_filas * largo_v) - 100.0f, 30, 5.0, 6.0 };
 
@@ -64,10 +80,22 @@ int main() {
         else if (event.type == ALLEGRO_EVENT_TIMER) {
 
             fisicas(&jugador);
-            float objetivo_camara = jugador.y - 300.0f;
-            if (objetivo_camara < camara) {
-                camara = objetivo_camara;
+            float objetivo_x = jugador.x - 500.0f;
+
+            if (objetivo_x > camara_x) {
+                camara_x = objetivo_x;
             }
+
+            camara_y = jugador.y - 520.0f;
+
+            if (camara_x < 0) {
+                camara_x = 0;
+            }
+
+            if (camara_y < 0) {
+                camara_y = 0;
+            }
+            fisicas_enemigos();
             //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////actualizar_bala();
             fisicas_balas();
             revisar_colisione_bala_enemigo();
@@ -85,15 +113,23 @@ int main() {
 
         if (redibujar && al_is_event_queue_empty(mijuego.queue)) {
             al_clear_to_color(al_map_rgb(0, 0, 0));
-            dibujar_mapa(camara);
-            dibujar_enemigos_mapa(camara);   
-            dibujar_balas_mapa(camara);
-            dibujo_personaje(&jugador, camara);
+
+            dibujar_fondo(camara_x);
+
+            dibujar_mapa(camara_x, camara_y);
+            dibujar_enemigos_mapa(camara_x, camara_y);   
+            dibujar_balas_mapa(camara_x, camara_y);
+            dibujo_personaje(&jugador, camara_x, camara_y);
+            dibujar_barra_vida(&jugador);
+
             
             al_flip_display();
             redibujar = false;
         }
     }
+    liberar_sprites_mapa();
+    liberar_sprites_personaje();
+    liberar_sprites_enemigos();
     cerrar_sistema(&mijuego);
 
     return 0;
@@ -111,7 +147,7 @@ bool inicializar_sistema(flujo_juego* j) {
     al_install_keyboard();
     al_init_primitives_addon();
 
-    j->display = al_create_display(800, 800);
+    j->display = al_create_display(1200, 800);
     if (!j->display) return false;
 
     j->timer = al_create_timer(1.0 / 60.0);
@@ -135,6 +171,9 @@ void cerrar_sistema(flujo_juego* j) {
     al_destroy_display(j->display);
 }
 
+
+
+/////////////CAMBIAAR FUNCION/////////////////
 int cargar_mapa(const char* ruta) {
     int cont;
     int i;
@@ -147,12 +186,15 @@ int cargar_mapa(const char* ruta) {
         return 0;
     }
 
+    mapa_filas = 0;
+    mapa_col = 0;
+
     while (fgets(linea, sizeof(linea), f) != NULL && mapa_filas < filas) { // lee todo el contenido de las filas
         cont = strlen(linea);
         if (cont > 0 && linea[cont - 1] == '\n') { // limpia '\n'
             linea[--cont] = '\0';
         }
-        for (i = 0; i <= cont && i < columnas; i++) {
+        for (i = 0; i < cont && i < columnas; i++) {
             mapa[mapa_filas][i] = linea[i];
         }
 

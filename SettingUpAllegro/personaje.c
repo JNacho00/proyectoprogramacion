@@ -4,24 +4,78 @@
 #include <allegro5/allegro_ttf.h>
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_physfs.h>
+#include <allegro5/allegro_image.h>
+
 #include <stdio.h>
 #include <stdbool.h>
 #define spawn_personajex 'o'
+#define FRAMES_IDLE 4
+#define FRAMES_CORRER 4
 
+#define CAMBIO_FRAME_IDLE 12
+#define CAMBIO_FRAME_CORRER 6
 
-void dibujo_personaje(personaje* p, float camara) {
+static ALLEGRO_BITMAP* frames_idle[FRAMES_IDLE] = {
+    NULL, NULL, NULL, NULL
+};
 
-    // Dibujamos al cuadrado
-    al_draw_filled_rectangle(
-        p->x,
-        p->y - camara,
-        p->x + p->ancho,
-        p->y + p->alto - camara,
-        al_map_rgb(255, 0, 0));
+static ALLEGRO_BITMAP* frames_correr[FRAMES_CORRER] = {
+    NULL, NULL, NULL, NULL
+};
+
+void dibujo_personaje(personaje* p, float camara_x, float camara_y) {
+    ALLEGRO_BITMAP* sprite;
+    int flags = 0;
+
+    if (p->animacion == ANIM_CORRER) {
+        sprite = frames_correr[p->frame_actual];
+    }
+    else {
+        sprite = frames_idle[p->frame_actual];
+    }
+
+    if (p->mira_derecha == false) {
+        flags = ALLEGRO_FLIP_HORIZONTAL;
+    }
+
+    al_draw_bitmap(sprite,p->x - camara_x,p->y - camara_y,flags);
 
 }
 
+void dibujar_barra_vida(personaje* p) {
+    float porcentaje;
+    float ancho_vida;
+
+    int x = 20;
+    int y = 20;
+    int ancho_barra = 220;
+    int alto_barra = 22;
+
+    if (p->vida_max <= 0) {
+        return;
+    }
+
+    porcentaje = (float)p->vida / (float)p->vida_max;
+
+    if (porcentaje < 0.0f) {
+        porcentaje = 0.0f;
+    }
+
+    if (porcentaje > 1.0f) {
+        porcentaje = 1.0f;
+    }
+
+    ancho_vida = ancho_barra * porcentaje;
+
+    al_draw_filled_rectangle(x,y,x + ancho_barra,y + alto_barra,al_map_rgb(90, 90, 90));
+
+    al_draw_filled_rectangle(x,y,x + ancho_vida,y + alto_barra,al_map_rgb(0, 200, 0));
+
+    al_draw_rectangle(x,y,x + ancho_barra,y + alto_barra,al_map_rgb(255, 255, 255),2);
+}
+
 void spawn_personaje(personaje* p) {
+   
     int f;
     int c;
 
@@ -33,9 +87,19 @@ void spawn_personaje(personaje* p) {
                 p->en_suelo = false;
                 p->ancho = 40;  
                 p->alto = 40;
-                p->velocidadx = 5.0;
-                p->velocidady = 5.0;
-                p->vida = 100;
+                p->velocidadx = 3.0;
+                p->velocidady = 3.0;
+                p->vida_max = 100;
+                p->vida = p->vida_max;
+                p->municion = 12;
+
+                p->frame_actual = 0;
+                p->contador_animacion = 0;
+
+                p->animacion = ANIM_IDLE;
+                p->frame_actual = 0;
+                p->contador_animacion = 0;
+                p->mira_derecha = true;
 
                 mapa[f][c] = '.'; 
 
@@ -45,21 +109,133 @@ void spawn_personaje(personaje* p) {
     }
 }
 
-void movimiento(personaje* p, ALLEGRO_KEYBOARD_STATE* estado_teclado) {
-    if (al_key_down(estado_teclado, ALLEGRO_KEY_A)) {
-        p->x -= p->velocidadx;
-    }
-    if (al_key_down(estado_teclado, ALLEGRO_KEY_D)) {
-        p->x += p->velocidadx;
+void recibir_dano_personaje(personaje* p, int dano_recibido) {
+    if (dano_recibido <= 0) {
+        return;
     }
 
+    if (p->vida <= 0) {
+        return;
+    }
+
+    p->vida -= dano_recibido;
+
+    if (p->vida < 0) {
+        p->vida = 0;
+    }
 }
+
+void movimiento(personaje* p, ALLEGRO_KEYBOARD_STATE* estado_teclado) {
+    float nueva_x;
+    int arriba;
+    int abajo;
+    int col;
+
+    /* Mover a la izquierda */
+    if (al_key_down(estado_teclado, ALLEGRO_KEY_A)) {
+        p->mira_derecha = false;
+
+        nueva_x = p->x - p->velocidadx;
+
+        arriba = fisicas_mapa((int)nueva_x,(int)(p->y + 2));
+
+        abajo = fisicas_mapa((int)nueva_x,(int)(p->y + p->alto - 2));
+
+        if (!arriba && !abajo) {
+            p->x = nueva_x;
+        }
+        else {
+            col = (int)nueva_x / ancho_v;
+            p->x = (col + 1) * ancho_v;
+        }
+    }
+
+    /* Mover a la derecha */
+    else if (al_key_down(estado_teclado, ALLEGRO_KEY_D)) {
+        p->mira_derecha = true;
+
+        nueva_x = p->x + p->velocidadx;
+
+        arriba = fisicas_mapa((int)(nueva_x + p->ancho),(int)(p->y + 2));
+
+        abajo = fisicas_mapa((int)(nueva_x + p->ancho),(int)(p->y + p->alto - 2));
+
+        if (!arriba && !abajo) {
+            p->x = nueva_x;
+        }
+        else {
+            col = (int)(nueva_x + p->ancho) / ancho_v;
+            p->x = col * ancho_v - p->ancho;
+        }
+    }
+}
+
 void saltar(personaje* p) {
     if (p->en_suelo == true) {
         p->velocidady = salto;
         p->en_suelo = false;
     }
 }
+
+void actualizar_idle_personaje(personaje* p, bool quieto) {
+    if (quieto == false) {
+        p->frame_actual = 0;
+        p->contador_animacion = 0;
+        return;
+    }
+
+    p->contador_animacion++;
+
+    if (p->contador_animacion >= 12) {
+        p->contador_animacion = 0;
+
+        p->frame_actual++;
+
+        if (p->frame_actual >= FRAMES_IDLE) {
+            p->frame_actual = 0;
+        }
+    }
+}
+
+static void actualizar_animacion_personaje(personaje* p, bool se_mueve) {
+    int total_frames;
+    int cambio_frame;
+    tipo_animacion nueva_animacion;
+
+    if (p->en_suelo == true && se_mueve == true) {
+        nueva_animacion = ANIM_CORRER;
+    }
+    else {
+        nueva_animacion = ANIM_IDLE;
+    }
+
+    if (nueva_animacion != p->animacion) {
+        p->animacion = nueva_animacion;
+        p->frame_actual = 0;
+        p->contador_animacion = 0;
+    }
+
+    if (p->animacion == ANIM_CORRER) {
+        total_frames = FRAMES_CORRER;
+        cambio_frame = CAMBIO_FRAME_CORRER;
+    }
+    else {
+        total_frames = FRAMES_IDLE;
+        cambio_frame = CAMBIO_FRAME_IDLE;
+    }
+
+    p->contador_animacion++;
+
+    if (p->contador_animacion >= cambio_frame) {
+        p->contador_animacion = 0;
+        p->frame_actual++;
+
+        if (p->frame_actual >= total_frames) {
+            p->frame_actual = 0;
+        }
+    }
+}
+
 void fisicas(personaje* p) {
     ALLEGRO_KEYBOARD_STATE key_state;
 
@@ -67,30 +243,65 @@ void fisicas(personaje* p) {
     int der;
     int fila;
 
-    p->velocidady += gravedad; // cuando cambie velocidad y de p* va aumentando la gravedad
-    p->y += p->velocidady; // va actualizando la poscicion y
+    float nueva_y;
+    float x_antes;
+    bool se_mueve;
 
-    izq = fisicas_mapa((int)(p->x + 2), (int)(p->y + p->alto)); // se le agrega int para pasar un valor limpio a las fisicas
-    der = fisicas_mapa((int)(p->x + p->ancho - 2), (int)(p->y + p->alto));
+   al_get_keyboard_state(&key_state);
+   x_antes = p->x;
+   movimiento(p, &key_state);
+   direccion(p, &key_state);
 
-    if (izq || der) {
-        p->velocidady = 0;
-        p->en_suelo = true;
 
-        fila = (int)(p->y + p->alto) / largo_v;
-        p->y = fila * largo_v - p->alto;
+    p->en_suelo = false;
+    p->velocidady += gravedad;
+    nueva_y = p->y + p->velocidady;
+
+    if (p->velocidady > 0) {
+        izq = fisicas_mapa((int)(p->x + 2), (int)(nueva_y + p->alto));
+        der = fisicas_mapa((int)(p->x + p->ancho - 2), (int)(p->y + p->alto));
+
+        if (izq || der) {
+            fila = (int)(nueva_y + p->alto) / largo_v;
+
+            p->y = fila * largo_v - p->alto;
+            p->velocidady = 0;
+            p->en_suelo = true;
+        }
+        else {
+            p->y = nueva_y;
+        }
     }
 
-    al_get_keyboard_state(&key_state);
-    movimiento(p, &key_state);
-    direccion(p, &key_state);
 
-    if (p->x > 800) p->x = -p->ancho; // Si sale por la derecha
+    else if (p->velocidady < 0) {
+        izq = fisicas_mapa((int)(p->x + 2),(int)nueva_y);
+        der = fisicas_mapa((int)(p->x + p->ancho - 2),(int)nueva_y);
 
-    if (p->x + p->ancho < 0) p->x = 800;   // Si sale por la izquierda 
+        if (izq || der) {
+            fila = (int)nueva_y / largo_v;
+
+            p->y = (fila + 1) * largo_v;
+            p->velocidady = 0;
+        }
+        else {
+            p->y = nueva_y;
+        }
+    }
+
+    bool quieto;
+    quieto = p->en_suelo == true &&! al_key_down(&key_state, ALLEGRO_KEY_A) &&! al_key_down(&key_state, ALLEGRO_KEY_D);
+
+    se_mueve = p->x != x_antes;
+
+    actualizar_animacion_personaje(p, se_mueve);
+
 }
 
+
+
 void direccion(personaje* p, ALLEGRO_KEYBOARD_STATE* estado_teclado) {
+  
     int dx = 0;
     int dy = 0;
 
@@ -117,17 +328,99 @@ void direccion(personaje* p, ALLEGRO_KEYBOARD_STATE* estado_teclado) {
 }
 
 void disparar(personaje* p) {
- 
     float vx;
     float vy;
-    float posx, posy;
+    float posx;
+    float posy;
+
+  if (p->municion <= 0) {
+        return;
+    }
     
+    if (p->direccionx == 0 && p->direcciony == 0) {
+        return;
+    }
+
     vx = p->direccionx * velocidad_bala;
     vy = p->direcciony * velocidad_bala;
-    
-    posx = p->x + (p->ancho / 2);
-    posy = p->y + (p->alto / 2);
 
-    crear_bala(posx, posy, vx, vy);
+    posx = p->x + (p->ancho - ancho_bala) / 2.0f;
+    posy = p->y + (p->alto - alto_bala) / 2.0f;
 
+    if (p->direccionx > 0) {
+        posx = p->x + p->ancho + 1;
+    }
+    else if (p->direccionx < 0) {
+        posx = p->x - ancho_bala - 1;
+    }
+
+    if (p->direcciony > 0) {
+        posy = p->y + p->alto + 1;
+    }
+    else if (p->direcciony < 0) {
+        posy = p->y - alto_bala - 1;
+    }
+
+    if (crear_bala(posx, posy, vx, vy)) {
+        p->municion--;
+    }
+}
+
+void liberar_sprites_personaje(void) {
+    int i;
+
+    for (i = 0; i < FRAMES_IDLE; i++) {
+        if (frames_idle[i] != NULL) {
+            al_destroy_bitmap(frames_idle[i]);
+            frames_idle[i] = NULL;
+        }
+    }
+
+    for (i = 0; i < FRAMES_CORRER; i++) {
+        if (frames_correr[i] != NULL) {
+            al_destroy_bitmap(frames_correr[i]);
+            frames_correr[i] = NULL;
+        }
+    }
+}
+
+
+bool cargar_sprites_personaje(void) {
+    const char* idle[FRAMES_IDLE] = {
+        "assets/personaje/PersonajeIddle1.png",
+        "assets/personaje/PersonajeIddle2.png",
+        "assets/personaje/PersonajeIddle3.png",
+        "assets/personaje/PersonajeIddle4.png"
+    };
+
+    const char* correr[FRAMES_CORRER] = {
+        "assets/personaje/Personajecorriendo1.png",
+        "assets/personaje/Personajecorriendo2.png",
+        "assets/personaje/Personajecorriendo3.png",
+        "assets/personaje/Personajecorriendo4.png"
+    };
+
+    int i;
+
+    for (i = 0; i < FRAMES_IDLE; i++) {
+        frames_idle[i] = al_load_bitmap(idle[i]);
+
+        if (frames_idle[i] == NULL) {
+            printf("No se pudo cargar idle%d.png\n", i + 1);
+            liberar_sprites_personaje();
+            return false;
+        }
+    }
+
+    for (i = 0; i < FRAMES_CORRER; i++) {
+        frames_correr[i] = al_load_bitmap(correr[i]);
+
+        if (frames_correr[i] == NULL) {
+            printf("No se pudo cargar frame correr %d\n", i + 1);
+            liberar_sprites_personaje();
+            return false;
+        }
+    }
+
+    return true;
 }

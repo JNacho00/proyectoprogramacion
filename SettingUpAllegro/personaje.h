@@ -12,6 +12,17 @@
 #include <stdbool.h>
 #include "mapa.h"
 
+
+typedef enum {
+
+    ANIM_IDLE,
+    ANIM_CORRER,
+    ANIM_SALTAR,
+    ANIM_DISPARAR
+
+} tipo_animacion;
+
+
 typedef struct {
     float x, y;
 
@@ -22,19 +33,35 @@ typedef struct {
     float velocidady;
 
     int vida;
+    int vida_max;
     int dano;
+    int municion;
 
     int direccionx;
     int direcciony;
 
+    tipo_animacion animacion;
+
+    int frame_actual;
+    int contador_animacion;
+
+    bool mira_derecha;
     bool en_suelo;
 } personaje;
 
 void movimiento(personaje* p, ALLEGRO_KEYBOARD_STATE* estado_teclado);
 void saltar(personaje* p);
 void fisicas(personaje* p);
-void dibujo_personaje(personaje* p, float camara);
+void dibujo_personaje(personaje* p, float camara_x, float camara_Y);
+void dibujar_barra_vida(personaje* p);
 void spawn_personaje(personaje* p);
 void direccion(personaje* p, ALLEGRO_KEYBOARD_STATE* estado_teclado);
 void disparar(personaje* p);
+
+bool cargar_sprites_personaje(void);
+void liberar_sprites_personaje(void);
+
+void recibir_dano_personaje(personaje* p, int dano_recibido);
+
+
 #endif
