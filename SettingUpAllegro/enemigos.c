@@ -1,4 +1,5 @@
 #include "enemigos.h"
+#include "personaje.h"
 #include "mapa.h"
 #include "balas.h"
 
@@ -6,12 +7,21 @@
 #define alto_enemigo 40
 #define max_enemigos 8
 #define GRAVEDAD_ENEMIGO 0.3f
+#define coold_at 60
 
 #define FRAMES_ENEMIGO_CAMINAR 5
 #define CAMBIO_FRAME_ENEMIGO_CAMINAR 7
 
+#define FRAMES_ENEMIGO_ATACAR 4
+#define CAMBIO_FRAME_ENEMIGO_ATACAR 8
+
+
 static ALLEGRO_BITMAP * frames_enemigo_caminar[FRAMES_ENEMIGO_CAMINAR] = {
     NULL, NULL, NULL, NULL, NULL
+};
+
+static ALLEGRO_BITMAP* frames_enemigo_atacar[FRAMES_ENEMIGO_ATACAR] = {
+    NULL, NULL, NULL, NULL
 };
 
 enemigo enemigos[max_enemigos];
@@ -37,6 +47,9 @@ void dibujar_enemigo(enemigo* e, float camara_x, float camara_y) {
 
     if (e->animacion == CAMINAR) {
         sprite = frames_enemigo_caminar[e->frame_actual];
+    }
+    else if (e->animacion == ATACAR) {
+        sprite = frames_enemigo_atacar[e->frame_actual];
     }
 
     if (e->direccionx < 0) {
@@ -65,7 +78,8 @@ void crear_enemigo(float x, float y) {
 
             enemigos[i].vida = 3;
             enemigos[i].vida_max = 3;
-            enemigos[i].dano = 10;
+            enemigos[i].dano = 2;
+            enemigos[i].cooldown_ataque = 0;
 
             enemigos[i].direccionx = 1;
 
@@ -73,6 +87,7 @@ void crear_enemigo(float x, float y) {
             enemigos[i].frame_actual = 0;
             enemigos[i].contador_animacion = 0;
 
+            enemigos[i].atacando = false;
             enemigos[i].en_suelo = false;
             enemigos[i].activo = true;
             return;
@@ -220,6 +235,13 @@ bool cargar_sprites_enemigos(void) {
         "assets/enemigos/enemigocorriendo5.png"
     };
 
+    const char* rutas_atacar[FRAMES_ENEMIGO_ATACAR] = {
+        "assets/enemigos/enemigoatacandox1.png",
+        "assets/enemigos/enemigoatacandox2.png",
+        "assets/enemigos/enemigoatacandox3.png",
+        "assets/enemigos/enemigoatacandox4.png"
+    };
+
     int i;
 
     for (i = 0; i < FRAMES_ENEMIGO_CAMINAR; i++) {
@@ -228,6 +250,16 @@ bool cargar_sprites_enemigos(void) {
         if (frames_enemigo_caminar[i] == NULL) {
             printf("No se pudo cargar: %s\n", rutas[i]);
 
+            liberar_sprites_enemigos();
+            return false;
+        }
+    }
+
+    for (i = 0; i < FRAMES_ENEMIGO_ATACAR; i++) {
+        frames_enemigo_atacar[i] = al_load_bitmap(rutas_atacar[i]);
+
+        if (frames_enemigo_atacar[i] == NULL) {
+            printf("No se pudo cargar: %s\n", rutas_atacar[i]);
             liberar_sprites_enemigos();
             return false;
         }
@@ -243,6 +275,13 @@ void liberar_sprites_enemigos(void) {
         if (frames_enemigo_caminar[i] != NULL) {
             al_destroy_bitmap(frames_enemigo_caminar[i]);
             frames_enemigo_caminar[i] = NULL;
+        }
+    }
+
+    for (i = 0; i < FRAMES_ENEMIGO_ATACAR; i++) {
+        if (frames_enemigo_atacar[i] != NULL) {
+            al_destroy_bitmap(frames_enemigo_atacar[i]);
+            frames_enemigo_atacar[i] = NULL;
         }
     }
 }
@@ -269,6 +308,12 @@ void actualizar_animacion_enemigo(enemigo* e) {
         total_frames = FRAMES_ENEMIGO_CAMINAR;
         cambio_frame = CAMBIO_FRAME_ENEMIGO_CAMINAR;
         break;
+
+    case ATACAR:
+        total_frames = FRAMES_ENEMIGO_ATACAR;
+        cambio_frame = CAMBIO_FRAME_ENEMIGO_ATACAR;
+        break;
+
     default:
         return;
     }
@@ -282,5 +327,59 @@ void actualizar_animacion_enemigo(enemigo* e) {
         if (e->frame_actual >= total_frames) {
             e->frame_actual = 0;
         }
+    }
+}
+
+bool colison_enemigo(enemigo* e, personaje* p) {
+    return
+        e->x < p->x + p->ancho &&
+        e->x + e->ancho > p->x &&
+        e->y < p->y + p->alto &&
+        e->y + e->alto > p->y;
+}
+
+void actualizar_ataque_enemigo(enemigo* e, personaje* p) {
+    float p_medio;
+    float e_medio;
+
+    if (e->activo == false) {
+        return;
+    }
+
+    if (e->cooldown_ataque > 0) {
+        e->cooldown_ataque--;
+    }
+
+    if (colison_enemigo(e, p)) {
+        e->atacando = true;
+
+        e_medio = e->x + e->ancho / 2.0f;
+        p_medio = p->x + p->ancho / 2.0f;
+
+        if (p_medio < e_medio) {
+            e->direccionx = -1;
+        }
+        else {
+            e->direccionx = 1;
+        }
+
+        cambiar_animacion_enemigo(e, ATACAR);
+
+        if (e->cooldown_ataque == 0) {
+            recibir_dano_personaje(p, e->dano);
+            e->cooldown_ataque = coold_at;
+        }
+    }
+    else {
+        e->atacando = false;
+        cambiar_animacion_enemigo(e, CAMINAR);
+    }
+}
+
+void actualizar_ataques_enemigos(personaje* p) {
+    int i;
+
+    for (i = 0; i < max_enemigos; i++) {
+        actualizar_ataque_enemigo(&enemigos[i], p);
     }
 }

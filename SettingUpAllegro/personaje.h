@@ -34,6 +34,7 @@ typedef struct {
 
     int vida;
     int vida_max;
+    int invulnerable;
     int dano;
     int municion;
 

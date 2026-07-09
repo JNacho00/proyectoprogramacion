@@ -73,6 +73,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Allegro_AddonTTF>true</Allegro_AddonTTF>
     <Allegro_AddonFont>true</Allegro_AddonFont>
+    <Allegro_AddonImage>true</Allegro_AddonImage>
+    <Allegro_AddonPrimitives>true</Allegro_AddonPrimitives>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -147,6 +149,21 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="alleg.c" />
+    <ClCompile Include="balas.c" />
+    <ClCompile Include="enemigos.c" />
+    <ClCompile Include="mapa.c" />
+    <ClCompile Include="personaje.c" />
+    <ClCompile Include="plataformas.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="balas.h" />
+    <ClInclude Include="enemigos.h" />
+    <ClInclude Include="mapa.h" />
+    <ClInclude Include="personaje.h" />
+    <ClInclude Include="plataformas.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="mapa.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

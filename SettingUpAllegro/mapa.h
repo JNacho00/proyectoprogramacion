@@ -10,7 +10,7 @@
 #include <stdbool.h>
 #define ancho_v 20
 #define largo_v 20
-#define columnas 120
+#define columnas 140
 #define filas 40
 
 void dibujar_mapa(float camara_x, float camara_y);

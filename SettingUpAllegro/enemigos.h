@@ -1,5 +1,6 @@
 #ifndef enemigos_h
 #define enemigos_h
+#include "personaje.h"
 #include <allegro5/allegro5.h>
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_ttf.h>
@@ -7,7 +8,6 @@
 #include <allegro5/allegro_physfs.h>
 #include <stdio.h>
 #include <stdbool.h>
-#define max_enemigos
 
 typedef enum {
 
@@ -28,6 +28,7 @@ typedef struct {
     int vida;
     int vida_max;
     int dano;
+    int cooldown_ataque;
 
     int direccionx;
 
@@ -35,6 +36,7 @@ typedef struct {
     int frame_actual;
     int contador_animacion;
 
+    bool atacando;
     bool en_suelo;
     bool activo;
 } enemigo;
@@ -46,10 +48,9 @@ void revisar_colisione_bala_enemigo();
 void movimiento_enemigo(enemigo* e);
 void fisicas_enemigo(enemigo* e);
 void spawn_enemigos();
-
 void fisicas_enemigos();
-
-
+void actualizar_ataque_enemigo(enemigo* e, personaje* p);
+void actualizar_ataques_enemigos(personaje* p);
 bool cargar_sprites_enemigos(void);
 void liberar_sprites_enemigos(void);
 

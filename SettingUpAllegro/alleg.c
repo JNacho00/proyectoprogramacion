@@ -95,8 +95,8 @@ int main() {
             if (camara_y < 0) {
                 camara_y = 0;
             }
+            actualizar_ataques_enemigos(&jugador);
             fisicas_enemigos();
-            //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////actualizar_bala();
             fisicas_balas();
             revisar_colisione_bala_enemigo();
             redibujar = true;

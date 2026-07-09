@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include "mapa.h"
+
 ALLEGRO_BITMAP* sprite_calle = NULL;
 ALLEGRO_BITMAP* tierra1 = NULL;
 ALLEGRO_BITMAP* tierra2 = NULL;

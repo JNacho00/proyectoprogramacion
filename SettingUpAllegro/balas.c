@@ -10,24 +10,24 @@
 #include "mapa.h"
 
 
-bala balas[max_balas];
+bala balas[max_balas_p];
 
-void dibujar_bala(bala* b, float camara) {
+void dibujar_bala(bala* b, float camara_x, float camara_y) {
 	al_draw_filled_rectangle(
-		b->x,
-		b->y - camara,
-		b->x + ancho_bala,
-		b->y + alto_bala - camara,
+		b->x - camara_x,
+		b->y - camara_y,
+		b->x + ancho_bala - camara_x,
+		b->y + alto_bala - camara_y,
 		al_map_rgb(0, 255, 0)
 	);
 }
 
-void crear_bala(int x, int y, float belocidadx, float belocidady) {
-	int i;
+bool crear_bala(int x, int y, float belocidadx, float belocidady) {
+	
+	static int i;
 
-	bool activa = true;
 
-	for (i = 0; i < max_balas; i++) {
+	for (i = 0; i < max_balas_p; i++) {
 		if (balas[i].activa == false) {
 
 			balas[i].x = x;
@@ -38,30 +38,17 @@ void crear_bala(int x, int y, float belocidadx, float belocidady) {
 			balas[i].ancho = ancho_bala;
 
 			balas[i].activa = true;
-			return;
+			return true;
 		}
 	}
+	return false;
 }
 
-/*
-void actualizar_bala() {
+void dibujar_balas_mapa(float camara_x, float camara_y) {
 	int i;
-
-	bool activa = true;
-
-	for (i = 0; i < max_balas; i++) {
+	for (i = 0; i < max_balas_p; i++) {
 		if (balas[i].activa == true) {
-			balas[i].x += balas[i].velocidad_bx;
-			balas[i].y += balas[i].velocidad_by;
-		}
-	}
-}
-*/
-void dibujar_balas_mapa(float camara) {
-	int i;
-	for (i = 0; i < max_balas; i++) {
-		if (balas[i].activa == true) {
-			dibujar_bala(&balas[i], camara);
+			dibujar_bala(&balas[i], camara_x, camara_y);
 		}
 	}
 }
@@ -69,17 +56,16 @@ void dibujar_balas_mapa(float camara) {
 void fisicas_balas() {
 	int i;
 
-	for (i = 0; i < max_balas; i++) {
+	for (i = 0; i < max_balas_p; i++) {
 		if (balas[i].activa == true) {
 
 			float nueva_x = balas[i].x + balas[i].velocidad_bx;
 			float nueva_y = balas[i].y + balas[i].velocidad_by;
 
-			if (fisicas_mapa((int)nueva_x, (int)nueva_y) || // arriba izquierda
-				fisicas_mapa((int)(nueva_x + balas[i].ancho), (int)nueva_y) || // arriba derecha
-				fisicas_mapa((int)nueva_x, (int)(nueva_y + balas[i].alto)) || // abajo izquierda
-				fisicas_mapa((int)(nueva_x + balas[i].ancho), // abajo derecha
-					(int)(nueva_y + balas[i].alto))) {
+			if (fisicas_mapa((int)nueva_x, (int)nueva_y) || 
+				fisicas_mapa((int)(nueva_x + balas[i].ancho), (int)nueva_y) || 
+				fisicas_mapa((int)nueva_x, (int)(nueva_y + balas[i].alto)) ||
+				fisicas_mapa((int)(nueva_x + balas[i].ancho), (int)(nueva_y + balas[i].alto))) {
 
 				balas[i].activa = false;
 			}
