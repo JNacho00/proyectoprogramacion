@@ -8,10 +8,9 @@
 #include <stdio.h>
 #include <stdbool.h>
 #define max_balas_p 3
-#define velocidad_bala 8.0f
-#define alto_bala 20.0f
-#define ancho_bala 20.0f
-
+#define velocidad_bala 15.0f
+#define alto_bala 10.0f
+#define ancho_bala 10.0f
 
 typedef struct {
 	float x, y;
@@ -22,9 +21,11 @@ typedef struct {
     bool activa;
 } bala;
 
-extern bala balas[max_balas_p];
+typedef struct personaje personaje;
+
 void dibujar_bala(bala* b, float camara_x, float camara_y);
-bool crear_bala(int x, int y, float belocicdadx, float belocidady);
-void dibujar_balas_mapa(float camara_x, float camara_y);
-void fisicas_balas();
+bool crear_bala(personaje* p, bala balas[]);
+void spawn_balas(bala balas[]);
+void dibujar_balas_mapa(bala balas[], float camara_x, float camara_y);
+void fisicas_balas(bala balas[]);
 #endif

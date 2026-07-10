@@ -59,7 +59,9 @@ int main() {
    
 
     personaje jugador;
+    //enemigo enemigos[max_enemigos]; 
     spawn_personaje(&jugador);
+    spawn_balas(jugador.balas);
     spawn_enemigos();
     float camara_x = 0.0f;
     float camara_y = 0.0f;
@@ -97,7 +99,7 @@ int main() {
             }
             actualizar_ataques_enemigos(&jugador);
             fisicas_enemigos();
-            fisicas_balas();
+            fisicas_balas(jugador.balas);
             revisar_colisione_bala_enemigo();
             redibujar = true;
         }
@@ -118,7 +120,7 @@ int main() {
 
             dibujar_mapa(camara_x, camara_y);
             dibujar_enemigos_mapa(camara_x, camara_y);   
-            dibujar_balas_mapa(camara_x, camara_y);
+            dibujar_balas_mapa(jugador.balas,camara_x, camara_y);
             dibujo_personaje(&jugador, camara_x, camara_y);
             dibujar_barra_vida(&jugador);
 

@@ -6,6 +6,7 @@
 #define ancho_enemigo 40
 #define alto_enemigo 40
 #define max_enemigos 8
+
 #define GRAVEDAD_ENEMIGO 0.3f
 #define coold_at 60
 
@@ -207,7 +208,7 @@ bool colision_bala_enemigo(bala* b, enemigo* e) {
     return false;
 }
 
-void revisar_colisione_bala_enemigo() {
+void revisar_colisione_bala_enemigo(bala balas[]) {
     int i;
     int j;
 

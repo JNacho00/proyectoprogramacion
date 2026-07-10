@@ -1,2 +1,5 @@
-﻿  personaje.c
+﻿  balas.c
+C:\Users\jkcre\source\repos\SettingUpAllegro\proyectoprogramacion\SettingUpAllegro\balas.c(51,3): warning C4033: 'crear_bala' debe devolver un valor
+C:\Users\jkcre\source\repos\SettingUpAllegro\proyectoprogramacion\SettingUpAllegro\balas.c(55,3): warning C4033: 'crear_bala' debe devolver un valor
+C:\Users\jkcre\source\repos\SettingUpAllegro\proyectoprogramacion\SettingUpAllegro\balas.c(94,1): warning C4715: 'crear_bala': no todas las rutas de acceso de control devuelven un valor
   SettingUpAllegro.vcxproj -> C:\Users\jkcre\source\repos\SettingUpAllegro\proyectoprogramacion\x64\Debug\SettingUpAllegro.exe

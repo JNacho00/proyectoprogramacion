@@ -23,7 +23,7 @@ typedef enum {
 } tipo_animacion;
 
 
-typedef struct {
+struct personaje {
     float x, y;
 
     float ancho;
@@ -48,7 +48,8 @@ typedef struct {
 
     bool mira_derecha;
     bool en_suelo;
-} personaje;
+    bala balas[max_balas_p];
+};
 
 void movimiento(personaje* p, ALLEGRO_KEYBOARD_STATE* estado_teclado);
 void saltar(personaje* p);

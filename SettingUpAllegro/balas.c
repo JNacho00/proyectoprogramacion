@@ -92,7 +92,7 @@ bool crear_bala(personaje* p, bala balas[]) {
 	}
 	return false;
 }
-
+ 
 void dibujar_balas_mapa(bala balas[], float camara_x, float camara_y) {
 	int i;
 	for (i = 0; i < max_balas_p; i++) {

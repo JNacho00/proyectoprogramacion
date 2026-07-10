@@ -39,6 +39,7 @@ typedef struct {
     bool atacando;
     bool en_suelo;
     bool activo;
+    //bala balas[max_balas_p];
 } enemigo;
 
 void dibujar_enemigo(enemigo* e, float camara_x, float camara_y);

@@ -102,7 +102,7 @@ void spawn_personaje(personaje* p) {
                 p->x = c * ancho_v;
                 p->y = f * largo_v;
                 p->en_suelo = false;
-                p->ancho = 40;  
+                p->ancho = 40;
                 p->alto = 40;
                 p->velocidadx = 3.0;
                 p->velocidady = 3.0;
@@ -380,43 +380,10 @@ void direccion(personaje* p, ALLEGRO_KEYBOARD_STATE* estado_teclado) {
 }
 
 void disparar(personaje* p) {
-    float vx;
-    float vy;
-    float posx;
-    float posy;
 
-    if (p->municion <= 0) {
-        return;
-    }
-    
-    if (p->direccionx == 0 && p->direcciony == 0) {
-        return;
-    }
-
-    vx = p->direccionx * velocidad_bala;
-    vy = p->direcciony * velocidad_bala;
-
-    posx = p->x + (p->ancho - ancho_bala) / 2.0f;
-    posy = p->y + (p->alto - alto_bala) / 2.0f;
-
-    if (p->direccionx > 0) {
-        posx = p->x + p->ancho + 1;
-    }
-    else if (p->direccionx < 0) {
-        posx = p->x - ancho_bala - 1;
-    }
-
-    if (p->direcciony > 0) {
-        posy = p->y + p->alto + 1;
-    }
-    else if (p->direcciony < 0) {
-        posy = p->y - alto_bala - 1;
-    }
-
-    if (crear_bala(posx, posy, vx, vy)) {
-        p->municion--;
-    }
+    crear_bala(p, p->balas);
 }
+
 
 void liberar_sprites_personaje(void) {
     int i;
