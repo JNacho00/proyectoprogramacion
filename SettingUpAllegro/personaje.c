@@ -12,11 +12,10 @@
 
 #define FRAMES_IDLE 4
 #define FRAMES_CORRER 4
-
-#define CAMBIO_FRAME_IDLE 12
-#define CAMBIO_FRAME_CORRER 6
-
 #define FRAMES_SALTAR 5
+
+#define CAMBIO_FRAME_IDLE 15
+#define CAMBIO_FRAME_CORRER 10
 #define CAMBIO_FRAME_SALTAR 20
 
 static ALLEGRO_BITMAP* frames_idle[FRAMES_IDLE] = {
@@ -60,35 +59,63 @@ void dibujo_personaje(personaje* p, float camara_x, float camara_y) {
 }
 
 void dibujar_barra_vida(personaje* p) {
-    float porcentaje;
+    float porcentaje_vida;
+    float porcentaje_escudo;
+
     float ancho_vida;
+    float ancho_escudo;
 
     int x = 20;
     int y = 20;
+
     int ancho_barra = 220;
     int alto_barra = 22;
+
+    int separacion = 8;
 
     if (p->vida_max <= 0) {
         return;
     }
 
-    porcentaje = (float)p->vida / (float)p->vida_max;
+    porcentaje_vida = (float)p->vida / (float)p->vida_max;
 
-    if (porcentaje < 0.0f) {
-        porcentaje = 0.0f;
+    if (porcentaje_vida < 0.0f) {
+        porcentaje_vida = 0.0f;
     }
 
-    if (porcentaje > 1.0f) {
-        porcentaje = 1.0f;
+    if (porcentaje_vida > 1.0f) {
+        porcentaje_vida = 1.0f;
     }
 
-    ancho_vida = ancho_barra * porcentaje;
+    ancho_vida = ancho_barra * porcentaje_vida;
 
     al_draw_filled_rectangle(x,y,x + ancho_barra,y + alto_barra,al_map_rgb(90, 90, 90));
 
     al_draw_filled_rectangle(x,y,x + ancho_vida,y + alto_barra,al_map_rgb(0, 200, 0));
 
     al_draw_rectangle(x,y,x + ancho_barra,y + alto_barra,al_map_rgb(255, 255, 255),2);
+
+    if (p->escudo_max <= 0) {
+        return;
+    }
+
+    porcentaje_escudo = (float)p->escudo / (float)p->escudo_max;
+
+    if (porcentaje_escudo < 0.0f) {
+        porcentaje_escudo = 0.0f;
+    }
+
+    if (porcentaje_escudo > 1.0f) {
+        porcentaje_escudo = 1.0f;
+    }
+
+    ancho_escudo = ancho_barra * porcentaje_escudo;
+
+    al_draw_filled_rectangle(x,y + alto_barra + separacion,x + ancho_barra,y + alto_barra + separacion + alto_barra,al_map_rgb(70, 70, 90));
+
+    al_draw_filled_rectangle(x,y + alto_barra + separacion,x + ancho_escudo,y + alto_barra + separacion + alto_barra,al_map_rgb(0, 150, 255));
+
+    al_draw_rectangle(x,y + alto_barra + separacion,x + ancho_barra,y + alto_barra + separacion + alto_barra,al_map_rgb(255, 255, 255),2);
 }
 
 void spawn_personaje(personaje* p) {
@@ -99,19 +126,22 @@ void spawn_personaje(personaje* p) {
     for (f = 0; f < mapa_filas; f++) {
         for (c = 0; c < mapa_col; c++) {
             if (mapa[f][c] == spawn_personajex) {
+             
                 p->x = c * ancho_v;
                 p->y = f * largo_v;
                 p->en_suelo = false;
                 p->ancho = 40;
                 p->alto = 40;
+
                 p->velocidadx = 3.0;
                 p->velocidady = 3.0;
+
+                p->invulnerable = 0;
                 p->vida_max = 10;
                 p->vida = p->vida_max;
-                p->municion = 20;
-
-                p->frame_actual = 0;
-                p->contador_animacion = 0;
+                p->escudo_max = 10;
+                p->escudo = p->escudo_max;
+                p->municion = 10;
 
                 p->animacion = ANIM_IDLE;
                 p->frame_actual = 0;
@@ -127,7 +157,7 @@ void spawn_personaje(personaje* p) {
 }
 
 void recibir_dano_personaje(personaje* p, int dano_recibido) {
-    if (dano_recibido <= 0) {
+    if (dano_recibido < 0) {
         return;
     }
 
@@ -160,14 +190,15 @@ void movimiento(personaje* p, ALLEGRO_KEYBOARD_STATE* estado_teclado) {
 
         nueva_x = p->x - p->velocidadx;
 
+        // revisar colisiones 
         arriba = fisicas_mapa((int)nueva_x,(int)(p->y + 2));
 
         abajo = fisicas_mapa((int)nueva_x,(int)(p->y + p->alto - 2));
 
-        if (!arriba && !abajo) {
+        if (arriba == 0 && abajo == 0) { // si ! hay, se mueve, 0 si no hay por fiscas_mapa
             p->x = nueva_x;
         }
-        else {
+        else { // deja al p en esa columna
             col = (int)nueva_x / ancho_v;
             p->x = (col + 1) * ancho_v;
         }
@@ -179,14 +210,15 @@ void movimiento(personaje* p, ALLEGRO_KEYBOARD_STATE* estado_teclado) {
 
         nueva_x = p->x + p->velocidadx;
 
+        // revisar colisiones 
         arriba = fisicas_mapa((int)(nueva_x + p->ancho),(int)(p->y + 2));
 
         abajo = fisicas_mapa((int)(nueva_x + p->ancho),(int)(p->y + p->alto - 2));
 
-        if (!arriba && !abajo) {
+        if (arriba == 0 && abajo == 0) {
             p->x = nueva_x;
         }
-        else {
+        else { // deja al p en esa columna
             col = (int)(nueva_x + p->ancho) / ancho_v;
             p->x = col * ancho_v - p->ancho;
         }
@@ -297,10 +329,7 @@ void fisicas(personaje* p) {
    al_get_keyboard_state(&key_state);
    x_antes = p->x;
    movimiento(p, &key_state);
-   direccion(p, &key_state);
    
-   se_mueve = p->x != x_antes;
-   actualizar_animacion_personaje(p, se_mueve);
    p->en_suelo = false;
    p->velocidady += gravedad;
    nueva_y = p->y + p->velocidady;
@@ -309,11 +338,12 @@ void fisicas(personaje* p) {
        p->invulnerable--;
    }
 
+   // si cae
    if (p->velocidady > 0) {
        izq = fisicas_mapa((int)(p->x + 2), (int)(nueva_y + p->alto));
-       der = fisicas_mapa((int)(p->x + p->ancho - 2), (int)(p->y + p->alto));
+       der = fisicas_mapa((int)(p->x + p->ancho - 2), (int)(nueva_y + p->alto));
 
-       if (izq || der) {
+       if (izq || der) { // si toco bloque solido abajo
            fila = (int)(nueva_y + p->alto) / largo_v;
 
            p->y = fila * largo_v - p->alto;
@@ -326,11 +356,11 @@ void fisicas(personaje* p) {
    }
 
 
-   else if (p->velocidady < 0) {
+   else if (p->velocidady < 0) { // si sube
        izq = fisicas_mapa((int)(p->x + 2),(int)nueva_y);
        der = fisicas_mapa((int)(p->x + p->ancho - 2),(int)nueva_y);
 
-       if (izq || der) {
+       if (izq || der) { // si toco bloque solido arriba
            fila = (int)nueva_y / largo_v;
 
            p->y = (fila + 1) * largo_v;
@@ -341,49 +371,11 @@ void fisicas(personaje* p) {
        }
    }
 
-   bool quieto;
-   quieto = p->en_suelo == true &&! al_key_down(&key_state, ALLEGRO_KEY_A) &&! al_key_down(&key_state, ALLEGRO_KEY_D);
-
    se_mueve = p->x != x_antes;
 
    actualizar_animacion_personaje(p, se_mueve);
 
 }
-
-
-
-void direccion(personaje* p, ALLEGRO_KEYBOARD_STATE* estado_teclado) {
-      
-    int dx = 0;
-    int dy = 0;
-
-    if (al_key_down(estado_teclado, ALLEGRO_KEY_LEFT)) {
-        dx = -1;
-    }
-
-    if (al_key_down(estado_teclado, ALLEGRO_KEY_RIGHT)) {
-        dx = 1;
-    }
-
-    if (al_key_down(estado_teclado, ALLEGRO_KEY_UP)) {
-        dy = -1;
-    }
-
-    if (al_key_down(estado_teclado, ALLEGRO_KEY_DOWN)) {
-        dy = 1;
-    }
-
-    if (dx != 0 || dy != 0) {
-        p->direccionx = dx;
-        p->direcciony = dy;
-    }
-}
-
-void disparar(personaje* p) {
-
-    crear_bala(p, p->balas);
-}
-
 
 void liberar_sprites_personaje(void) {
     int i;
@@ -466,4 +458,59 @@ bool cargar_sprites_personaje(void) {
         }
     }
     return true;
+}
+
+void disparo_mouse(personaje* p, float mouse_x, float mouse_y, float camara_x, float camara_y) {
+    int i;
+
+    float mouse_mapa_x;
+    float mouse_mapa_y;
+
+    float centro_jugador_x;
+    float centro_jugador_y;
+
+    float dx;
+    float dy;
+    float distancia;
+
+    if (p->municion <= 0) {
+        return;
+    }
+
+    // donde esta el cursor segun event.mouse
+    mouse_mapa_x = mouse_x + camara_x;
+    mouse_mapa_y = mouse_y + camara_y;
+
+    centro_jugador_x = p->x + p->ancho / 2.0f;
+    centro_jugador_y = p->y + p->alto / 2.0f;
+
+    // direccion de la bala
+    dx = mouse_mapa_x - centro_jugador_x;
+    dy = mouse_mapa_y - centro_jugador_y;
+
+    distancia = sqrt(dx * dx + dy * dy);
+
+    if (distancia == 0) {
+        return;
+    }
+
+    for (i = 0; i < max_balas_p; i++) {
+        if (p->balas[i].activa == false) {
+            p->balas[i].x = centro_jugador_x;
+            p->balas[i].y = centro_jugador_y;
+            p->balas[i].ancho = ancho_bala;
+            p->balas[i].alto = alto_bala;
+
+            p->balas[i].velocidad_bx = (dx / distancia) * velocidad_bala;
+            p->balas[i].velocidad_by = (dy / distancia) * velocidad_bala;
+
+            p->balas[i].frame_actual = 0;
+            p->balas[i].contador_animacion = 0;
+            p->balas[i].activa = true;
+
+            p->municion--;
+
+            return;
+        }
+    }
 }

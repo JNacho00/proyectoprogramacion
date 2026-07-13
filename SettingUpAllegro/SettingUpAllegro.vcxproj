@@ -151,6 +151,7 @@
     <ClCompile Include="alleg.c" />
     <ClCompile Include="balas.c" />
     <ClCompile Include="enemigos.c" />
+    <ClCompile Include="items.c" />
     <ClCompile Include="mapa.c" />
     <ClCompile Include="personaje.c" />
     <ClCompile Include="plataformas.c" />
@@ -158,12 +159,14 @@
   <ItemGroup>
     <ClInclude Include="balas.h" />
     <ClInclude Include="enemigos.h" />
+    <ClInclude Include="items.h" />
     <ClInclude Include="mapa.h" />
     <ClInclude Include="personaje.h" />
     <ClInclude Include="plataformas.h" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="mapa.txt" />
+    <Text Include="mapa1.txt" />
+    <Text Include="mapa2.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -36,6 +36,9 @@
     <ClCompile Include="enemigos.c">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
+    <ClCompile Include="items.c">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="personaje.h">
@@ -53,9 +56,15 @@
     <ClInclude Include="enemigos.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
+    <ClInclude Include="items.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="mapa.txt">
+    <Text Include="mapa1.txt">
+      <Filter>Archivos de recursos</Filter>
+    </Text>
+    <Text Include="mapa2.txt">
       <Filter>Archivos de recursos</Filter>
     </Text>
   </ItemGroup>

@@ -5,7 +5,6 @@
 
 #define ancho_enemigo 40
 #define alto_enemigo 40
-#define max_enemigos 8
 
 #define GRAVEDAD_ENEMIGO 0.3f
 #define coold_at 60
@@ -25,44 +24,124 @@ static ALLEGRO_BITMAP* frames_enemigo_atacar[FRAMES_ENEMIGO_ATACAR] = {
     NULL, NULL, NULL, NULL
 };
 
-enemigo enemigos[max_enemigos];
 
 void dibujar_enemigo(enemigo* e, float camara_x, float camara_y) {
-    float x = e->x - camara_x;
-    float y = e->y - camara_y;
-    
-    float ancho_barra = e->ancho + 20.0f;
-    float alto_barra = 7.0f;
+    float x;
+    float y;
 
-    float vida_actual = (e->vida / (float)e->vida_max) * ancho_barra;
-
-    float barra_x = x -10.0f;
-    float barra_y = y - 20.0f;
-
-    al_draw_filled_rectangle(barra_x,barra_y,barra_x + ancho_barra,barra_y + alto_barra,al_map_rgb(80, 0, 0));
-
-    al_draw_filled_rectangle(barra_x,barra_y,barra_x + vida_actual,barra_y + alto_barra,al_map_rgb(255, 0, 0));
+    float ancho_barra;
+    float alto_barra;
+    float vida_actual;
+    float barra_x;
+    float barra_y;
 
     ALLEGRO_BITMAP* sprite = NULL;
     int flags = 0;
 
-    if (e->animacion == CAMINAR) {
-        sprite = frames_enemigo_caminar[e->frame_actual];
-    }
-    else if (e->animacion == ATACAR) {
-        sprite = frames_enemigo_atacar[e->frame_actual];
+    if (e->activo == false) {
+        return;
     }
 
-    if (e->direccionx < 0) {
-        flags = ALLEGRO_FLIP_HORIZONTAL;
+    x = e->x - camara_x;
+    y = e->y - camara_y;
+
+
+    if (e->tipo == zombie_n) {
+
+        if (e->animacion == CAMINAR) {
+            sprite = frames_enemigo_caminar[e->frame_actual];
+        }
+        else if (e->animacion == ATACAR) {
+            sprite = frames_enemigo_atacar[e->frame_actual];
+        }
+
+        if (e->direccionx < 0) {
+            flags = ALLEGRO_FLIP_HORIZONTAL;
+        }
+
+        if (sprite != NULL) {
+            al_draw_scaled_bitmap(
+                sprite,
+                0,
+                0,
+                al_get_bitmap_width(sprite),
+                al_get_bitmap_height(sprite),
+                x,
+                y,
+                e->ancho,
+                e->alto,
+                flags
+            );
+        }
+    }
+    else if (e->tipo == zombie_r) {
+        al_draw_filled_rectangle(
+            x,
+            y,
+            x + e->ancho,
+            y + e->alto,
+            al_map_rgb(255, 0, 0)
+        );
     }
 
-    if (sprite != NULL) {
-        al_draw_scaled_bitmap(sprite,0,0,al_get_bitmap_width(sprite),al_get_bitmap_height(sprite),e->x - camara_x,e->y - camara_y,e->ancho,e->alto,flags);
+
+    if (e->vida_max <= 0) {
+        return;
+    }
+
+    ancho_barra = e->ancho + 20.0f;
+    alto_barra = 7.0f;
+
+    vida_actual = (e->vida / (float)e->vida_max) * ancho_barra;
+
+    if (vida_actual < 0) {
+        vida_actual = 0;
+    }
+
+    if (vida_actual > ancho_barra) {
+        vida_actual = ancho_barra;
+    }
+
+    barra_x = x - 10.0f;
+    barra_y = y - 20.0f;
+
+    al_draw_filled_rectangle(barra_x,barra_y,barra_x + ancho_barra,barra_y + alto_barra,al_map_rgb(80, 0, 0));
+
+    al_draw_filled_rectangle(barra_x,barra_y,barra_x + vida_actual,barra_y + alto_barra,al_map_rgb(255, 0, 0));
+}
+
+
+void inicializar_enemigos(enemigo enemigos[]) {
+    int i;
+
+    for (i = 0; i < max_enemigos; i++) {
+        enemigos[i].x = 0;
+        enemigos[i].y = 0;
+
+        enemigos[i].ancho = 40;
+        enemigos[i].alto = 40;
+
+        enemigos[i].velocidadx = 0;
+        enemigos[i].velocidady = 0;
+
+        enemigos[i].vida = 0;
+        enemigos[i].vida_max = 0;
+        enemigos[i].dano = 0;
+
+        enemigos[i].direccionx = 1;
+
+        enemigos[i].atacando = false;
+        enemigos[i].cooldown_ataque = 0;
+
+        enemigos[i].animacion = CAMINAR;
+        enemigos[i].frame_actual = 0;
+        enemigos[i].contador_animacion = 0;
+
+        enemigos[i].activo = false;
     }
 }
 
-void crear_enemigo(float x, float y) {
+void crear_enemigo(enemigo enemigos[], float x, float y, tipo_enemigo tipo) {
     int i;
 
     for (i = 0; i < max_enemigos; i++) {
@@ -74,15 +153,11 @@ void crear_enemigo(float x, float y) {
             enemigos[i].ancho = 40;
             enemigos[i].alto = 40;
 
-            enemigos[i].velocidadx = 1.0f;
-            enemigos[i].velocidady = 0.0f;
 
-            enemigos[i].vida = 3;
-            enemigos[i].vida_max = 3;
-            enemigos[i].dano = 2;
+            enemigos[i].tipo = tipo;
             enemigos[i].cooldown_ataque = 0;
 
-            enemigos[i].direccionx = 1;
+            enemigos[i].velocidady = 0.0f;
 
             enemigos[i].animacion = CAMINAR;
             enemigos[i].frame_actual = 0;
@@ -90,13 +165,31 @@ void crear_enemigo(float x, float y) {
 
             enemigos[i].atacando = false;
             enemigos[i].en_suelo = false;
+            enemigos[i].persiguiendo = false;
+
+            if (tipo == zombie_r) {
+                enemigos[i].direccionx = -1;
+                enemigos[i].velocidadx = 2.3f;
+                enemigos[i].vida_max = 1;
+                enemigos[i].dano = 3;
+                enemigos[i].rango_vision = 550.0f;
+
+            }
+            if (tipo == zombie_n) {
+                enemigos[i].direccionx = 1;
+                enemigos[i].velocidadx = 1.0f;
+                enemigos[i].vida_max = 3;
+                enemigos[i].dano = 2;
+                enemigos[i].rango_vision = 0.0f;
+            }
+            enemigos[i].vida = enemigos[i].vida_max;
             enemigos[i].activo = true;
             return;
         }
     }
 }
 
-void dibujar_enemigos_mapa(float camara_x, float camara_y) {
+void dibujar_enemigos_mapa(enemigo enemigos[], float camara_x, float camara_y) {
     int i;
 
     for (i = 0; i < max_enemigos; i++) {
@@ -106,7 +199,7 @@ void dibujar_enemigos_mapa(float camara_x, float camara_y) {
     }
 }
 
-void spawn_enemigos() {
+void spawn_enemigos(enemigo enemigos[]) {
     int fila;
     int columna;
 
@@ -115,7 +208,13 @@ void spawn_enemigos() {
 
             if (mapa[fila][columna] == 'e') {
 
-                crear_enemigo(columna * ancho_v,fila * largo_v);
+                crear_enemigo(enemigos, columna * ancho_v,fila * largo_v, zombie_n);
+
+                mapa[fila][columna] = '.';
+            }
+            if (mapa[fila][columna] == 'R') {
+
+                crear_enemigo(enemigos, columna * ancho_v, fila * largo_v, zombie_r);
 
                 mapa[fila][columna] = '.';
             }
@@ -123,7 +222,7 @@ void spawn_enemigos() {
     }
 }
 
-void fisicas_enemigo(enemigo* e) {
+void fisicas_enemigo(enemigo* e, personaje* p) {
     float nueva_pos_x;
     int pared;
     int suelo;
@@ -133,15 +232,46 @@ void fisicas_enemigo(enemigo* e) {
         return;
     }
 
+    if (e->tipo == zombie_r) {
+        float centro_enemigo;
+        float centro_personaje;
+        float distancia;
+
+        // define la direccion de p
+        centro_enemigo = e->x + e->ancho / 2.0f;
+        centro_personaje = p->x + p->ancho / 2.0f;
+
+        distancia = centro_personaje - centro_enemigo;
+
+        // valor absoluto para medir solo la distancia
+        if (distancia < 0) {
+            distancia = distancia * -1;
+        }
+
+        if (distancia <= e->rango_vision) {
+            e->persiguiendo = true;
+        }
+
+        if (e->persiguiendo == true) {
+            if (centro_personaje < centro_enemigo) {
+                e->direccionx = -1;
+            }
+            else {
+                e->direccionx = 1;
+            }
+        }
+    }
+
     nueva_pos_x = e->x + e->velocidadx * e->direccionx;
 
     if (e->direccionx == 1) { // derecha
 
+        // revisa colison
         pared = fisicas_mapa((int)(nueva_pos_x + e->ancho),(int)(e->y + 1)) || fisicas_mapa((int)(nueva_pos_x + e->ancho),(int)(e->y + e->alto - 1));
 
         suelo = fisicas_mapa((int)(nueva_pos_x + e->ancho + 1),(int)(e->y + e->alto + 1));
 
-        if (pared || !suelo) {
+        if (pared || suelo == 0) { // si hay pared y no suelo
             e->direccionx = -1;
 
             if (pared) {
@@ -155,11 +285,12 @@ void fisicas_enemigo(enemigo* e) {
 
     else { // izquierda
 
+        // revisa colison
         pared = fisicas_mapa((int)nueva_pos_x,(int)(e->y + 1)) || fisicas_mapa((int)nueva_pos_x,(int)(e->y + e->alto - 1));
 
         suelo = fisicas_mapa((int)(nueva_pos_x - 1), (int)(e->y + e->alto + 1));
 
-        if (pared || !suelo) {
+        if (pared || suelo == 0) { // si hay pared y no suelo
             e->direccionx = 1;
 
             if (pared) {
@@ -175,13 +306,13 @@ void fisicas_enemigo(enemigo* e) {
 }
 
 
-void fisicas_enemigos() {
+void fisicas_enemigos(enemigo enemigos[], personaje* p) {
     int i;
 
     for (i = 0; i < max_enemigos; i++) {
         actualizar_animacion_enemigo(&enemigos[i]);
 
-        fisicas_enemigo(&enemigos[i]);
+        fisicas_enemigo(&enemigos[i], p);
     }
 
 }
@@ -208,7 +339,7 @@ bool colision_bala_enemigo(bala* b, enemigo* e) {
     return false;
 }
 
-void revisar_colisione_bala_enemigo(bala balas[]) {
+void revisar_colisiones_bala_enemigo(enemigo enemigos[], bala balas[]) {
     int i;
     int j;
 
@@ -377,7 +508,7 @@ void actualizar_ataque_enemigo(enemigo* e, personaje* p) {
     }
 }
 
-void actualizar_ataques_enemigos(personaje* p) {
+void actualizar_ataques_enemigos(personaje* p, enemigo enemigos[]) {
     int i;
 
     for (i = 0; i < max_enemigos; i++) {

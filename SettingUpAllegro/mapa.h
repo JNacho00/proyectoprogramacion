@@ -1,4 +1,5 @@
 #ifndef mapa_h
+#define mapa_h
 #include "personaje.h"
 #include <allegro5/allegro5.h>
 #include <allegro5/allegro_font.h>
@@ -18,12 +19,13 @@ extern char mapa[filas][columnas + 1];
 extern int mapa_filas;
 extern int mapa_col;
 int fisicas_mapa(int pos_x, int pos_y);
-void romper_plataforma(fila);
+void romper_plataforma(int fila);
 bool cargar_sprites_mapa();
 void dibujar_tile_calle(int columna_sprite, int fila_sprite, float x, float y);
 void liberar_sprites_mapa();
 
-
+int portal(personaje* p);
+void mapas(char ruta[], int nivel);
 void dibujar_fondo(float camara_x);
 
 

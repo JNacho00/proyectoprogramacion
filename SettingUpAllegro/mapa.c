@@ -1,3 +1,4 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include <allegro5/allegro5.h>
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_ttf.h>
@@ -6,6 +7,7 @@
 #include <allegro5/allegro_image.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <string.h>
 #include "mapa.h"
 
 ALLEGRO_BITMAP* sprite_calle = NULL;
@@ -18,7 +20,6 @@ char mapa[filas][columnas + 1];
 int mapa_estado[filas][columnas];
 int mapa_filas = 0;
 int mapa_col = 0;
-char bloque;
 
 int fisicas_mapa(int pos_x, int pos_y) {
     int col = pos_x / ancho_v;
@@ -30,11 +31,11 @@ int fisicas_mapa(int pos_x, int pos_y) {
     }
 
     if (fila < 0) {
-        return 1;
+        return 1; //condicion para no subir mas de la fila "40"
     }
 
     if (fila >= mapa_filas) {
-        return 0;
+        return 1; // hacer suelo solido debajo de la fila 40
     }
 
     bloque = mapa[fila][col];
@@ -92,9 +93,6 @@ void dibujar_mapa(float camara_x, float camara_y) {
                 al_draw_filled_rectangle(x, y, x + ancho_v, y + largo_v,
                     al_map_rgb(250, 250, 250));
                 break;
-            case 't':
-                al_draw_filled_triangle(x, y, x, y, x, y + ancho_v + largo_v,//////////////////////////////////////////////////////////////////////
-                    al_map_rgb(250, 0, 0));
             case '1':
                 dibujar_tile_calle(0, 0, x, y);
                 break;
@@ -129,13 +127,22 @@ void dibujar_mapa(float camara_x, float camara_y) {
             case 'C':
                 al_draw_bitmap(tierra3, x, y, 0);
                 break;
+            case 'Z':
+                al_draw_filled_rectangle(
+                    x,
+                    y,
+                    x + ancho_v,
+                    y + largo_v,
+                    al_map_rgb(0, 200, 255)
+                );
+                break;
             }
             
         }
     }
 }
 
-void romper_plataforma(fila) {
+void romper_plataforma(int fila) {
     int j;
 
     for (j = 0; j < columnas; j++) {
@@ -188,6 +195,21 @@ void liberar_sprites_mapa() {
         sprite_calle = NULL;
     }
 
+    if (tierra1 != NULL) {
+        al_destroy_bitmap(tierra1);
+        fondo = NULL;
+    }
+
+    if (tierra2 != NULL) {
+        al_destroy_bitmap(tierra2);
+        fondo = NULL;
+    }
+
+    if (tierra3 != NULL) {
+        al_destroy_bitmap(tierra3);
+        fondo = NULL;
+    }
+
     if (fondo != NULL) {
         al_destroy_bitmap(fondo);
         fondo = NULL;
@@ -214,4 +236,43 @@ void dibujar_fondo(float camara_x) {
 
         x += ancho_fondo;
     }
+}
+
+void mapas(char ruta[], int nivel) {
+    char numero[2];
+
+    strcpy(ruta, "mapa");
+
+    numero[0] = '0' + nivel;
+    numero[1] = '\0';
+
+    strcat(ruta, numero);
+    strcat(ruta, ".txt");
+}
+
+int portal(personaje* p) {
+    int col_i;
+    int col_d;
+    int fila_arriba;
+    int fila_abajo;
+
+    col_i = (int)(p->x) / ancho_v;
+    col_d = (int)(p->x + p->ancho - 1) / ancho_v;
+
+    fila_arriba = (int)(p->y) / largo_v;
+    fila_abajo = (int)(p->y + p->alto - 1) / largo_v;
+
+    if (fila_arriba < 0 || fila_abajo >= mapa_filas ||
+        col_i < 0 || col_d >= mapa_col) {
+        return 0;
+    }
+
+    if (mapa[fila_arriba][col_i] == 'Z' ||
+        mapa[fila_arriba][col_d] == 'Z' ||
+        mapa[fila_abajo][col_i] == 'Z' ||
+        mapa[fila_abajo][col_d] == 'Z') {
+        return 1;
+    }
+
+    return 0;
 }

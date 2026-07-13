@@ -10,6 +10,7 @@
 #include <allegro5/allegro_physfs.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <math.h>
 #include "mapa.h"
 
 
@@ -34,6 +35,8 @@ struct personaje {
 
     int vida;
     int vida_max;
+    int escudo;
+    int escudo_max;
     int invulnerable;
     int dano;
     int municion;
@@ -57,9 +60,8 @@ void fisicas(personaje* p);
 void dibujo_personaje(personaje* p, float camara_x, float camara_Y);
 void dibujar_barra_vida(personaje* p);
 void spawn_personaje(personaje* p);
-void direccion(personaje* p, ALLEGRO_KEYBOARD_STATE* estado_teclado);
-void disparar(personaje* p);
-
+void disparo_mouse(personaje* p, float mouse_x, float mouse_y, float camara_x, float camara_y);
+void actualizar_animacion_personaje(personaje* p, bool se_mueve);
 bool cargar_sprites_personaje(void);
 void liberar_sprites_personaje(void);
 
