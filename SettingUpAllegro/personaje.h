@@ -13,7 +13,6 @@
 #include <math.h>
 #include "mapa.h"
 
-
 typedef enum {
 
     ANIM_IDLE,
@@ -22,7 +21,6 @@ typedef enum {
     ANIM_DISPARAR
 
 } tipo_animacion;
-
 
 struct personaje {
     float x, y;
@@ -40,6 +38,7 @@ struct personaje {
     int invulnerable;
     int dano;
     int municion;
+    int puntaje;
 
     int direccionx;
     int direcciony;
@@ -51,6 +50,7 @@ struct personaje {
 
     bool mira_derecha;
     bool en_suelo;
+    bool agarro_llave;
     bala balas[max_balas_p];
 };
 
@@ -64,8 +64,9 @@ void disparo_mouse(personaje* p, float mouse_x, float mouse_y, float camara_x, f
 void actualizar_animacion_personaje(personaje* p, bool se_mueve);
 bool cargar_sprites_personaje(void);
 void liberar_sprites_personaje(void);
-
+void sombra_personaje(personaje* p, float camara_x, float camara_y);
 void recibir_dano_personaje(personaje* p, int dano_recibido);
+void dibujar_puntaje(personaje* p, ALLEGRO_FONT* fuente);
 
 
 #endif

@@ -13,17 +13,29 @@
 #define max_items 10
 
 typedef enum {
+
 	VIDA,
 	MUNICION,
 	ESCUDO,
 	BARRIL,
+	LLAVE,
+	MONEDA,
+
 } tipo_item;
 
 typedef struct {
-	int x, y;
+	float x, y;
 	int ancho;
 	int alto;
 	int valor;
+
+	float y_inicio;
+	float velocidad_y;
+	float distancia;
+	int direccion_y;
+
+	int frame_actual;
+	int contador_animacion;
 
 	tipo_item tipo;
 	bool activo;
@@ -40,7 +52,13 @@ bool interaccion_item(item* it, personaje* p);
 void actualizar_items(item items[], personaje* p);
 
 bool colision_bala_item(bala* b, item* i);
-void explosion_barril(item* barril, enemigo enemigos[]);
-void colision_bala_barril(item items[], bala balas[], enemigo enemigos[]);
+void explosion_barril(item* barril, enemigo enemigos[], personaje* p);
+void colision_bala_barril(item items[], bala balas[], enemigo enemigos[], personaje* p);
+
+
+bool cargar_sprites_items(void);
+void liberar_sprites_items(void);
+void actualizar_animacion_item(item* i);
+void mover_item(item* i);
 
 #endif 

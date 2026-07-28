@@ -1,3 +1,5 @@
+#define _CRT_SECURE_NO_WARNINGS
+
 #include "personaje.h"
 #include <allegro5/allegro5.h>
 #include <allegro5/allegro_font.h>
@@ -118,17 +120,33 @@ void dibujar_barra_vida(personaje* p) {
     al_draw_rectangle(x,y + alto_barra + separacion,x + ancho_barra,y + alto_barra + separacion + alto_barra,al_map_rgb(255, 255, 255),2);
 }
 
+void dibujar_puntaje(personaje* p, ALLEGRO_FONT* fuente) {
+    char texto[50];
+
+    sprintf(texto, "Puntos:%d", p->puntaje);
+
+    al_draw_text(
+        fuente,
+        al_map_rgb(255, 255, 255),
+        20,
+        85,
+        ALLEGRO_ALIGN_LEFT,
+        texto
+    );
+}
+
 void spawn_personaje(personaje* p) {
    
     int f;
     int c;
 
-    for (f = 0; f < mapa_filas; f++) {
-        for (c = 0; c < mapa_col; c++) {
+    for (f = 0; f < filas; f++) {
+        for (c = 0; c < columnas; c++) {
             if (mapa[f][c] == spawn_personajex) {
              
                 p->x = c * ancho_v;
                 p->y = f * largo_v;
+
                 p->en_suelo = false;
                 p->ancho = 40;
                 p->alto = 40;
@@ -142,6 +160,7 @@ void spawn_personaje(personaje* p) {
                 p->escudo_max = 10;
                 p->escudo = p->escudo_max;
                 p->municion = 10;
+                p->agarro_llave = false;
 
                 p->animacion = ANIM_IDLE;
                 p->frame_actual = 0;
@@ -169,7 +188,18 @@ void recibir_dano_personaje(personaje* p, int dano_recibido) {
         return;
     }
 
-    p->vida -= dano_recibido;
+    if (p->escudo > 0) {
+        p->escudo -= dano_recibido;
+
+        if (p->escudo < 0) {
+            p->vida += p->escudo;
+            p->escudo = 0;
+        }
+    }
+
+    else if (p->x + p->ancho / 2.0f) {
+        p->vida -= dano_recibido;
+    }
 
     if (p->vida < 0) {
         p->vida = 0;
@@ -229,26 +259,6 @@ void saltar(personaje* p) {
     if (p->en_suelo == true) {
         p->velocidady = salto;
         p->en_suelo = false;
-    }
-}
-
-void actualizar_idle_personaje(personaje* p, bool quieto) {
-    if (quieto == false) {
-        p->frame_actual = 0;
-        p->contador_animacion = 0;
-        return;
-    }
-
-    p->contador_animacion++;
-
-    if (p->contador_animacion >= 12) {
-        p->contador_animacion = 0;
-
-        p->frame_actual++;
-
-        if (p->frame_actual >= FRAMES_IDLE) {
-            p->frame_actual = 0;
-        }
     }
 }
 
@@ -461,6 +471,7 @@ bool cargar_sprites_personaje(void) {
 }
 
 void disparo_mouse(personaje* p, float mouse_x, float mouse_y, float camara_x, float camara_y) {
+    
     int i;
 
     float mouse_mapa_x;
@@ -513,4 +524,16 @@ void disparo_mouse(personaje* p, float mouse_x, float mouse_y, float camara_x, f
             return;
         }
     }
+}
+
+void sombra_personaje(personaje* p, float camara_x, float camara_y) {
+    float centro_jugador_X;
+    float centro_jugador_y;
+
+    centro_jugador_X = p->x + p->ancho / 2.0f - camara_x;
+    centro_jugador_y = p->y + p->alto / 2.0f - camara_y;
+
+    al_draw_filled_ellipse(centro_jugador_X, centro_jugador_y,
+                           p->ancho * 1.0f, p->alto * 1.0f,
+                           al_map_rgba(60, 60, 60, 80));
 }

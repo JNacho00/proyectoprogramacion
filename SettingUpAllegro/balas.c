@@ -67,64 +67,6 @@ void spawn_balas(bala balas[]) { //inicializa balas
 	}
 }
 
-bool crear_bala(personaje* p, bala balas[]) { // con *p modificamos directamente al personaje
-	
-	int i;
-	float vx;
-	float vy;
-	float posx;
-	float posy;
-
-	if (p->municion <= 0) {
-		return false;
-	}
-
-	if (p->direccionx == 0 && p->direcciony == 0) {
-		return false;
-	}
-
-	vx = p->direccionx * velocidad_bala;
-	vy = p->direcciony * velocidad_bala;
-
-	posx = p->x + (p->ancho - ancho_bala) / 2.0f;
-	posy = p->y + (p->alto - alto_bala) / 2.0f;
-
-	// ajusta la posicion
-	if (p->direccionx > 0) { // derecha
-		posx = p->x + p->ancho;
-	}
-	else if (p->direccionx < 0) { // izquierda
-		posx = p->x - ancho_bala;
-	}
-
-	if (p->direcciony > 0) { // abajo
-		posy = p->y + p->alto;
-	}
-	else if (p->direcciony < 0) { // arriba
-		posy = p->y - alto_bala;
-	}
-
-	for (i = 0; i < max_balas_p; i++) {
-		if (balas[i].activa == false) {
-
-			balas[i].x = posx;
-			balas[i].y = posy;
-			balas[i].velocidad_bx = vx;
-			balas[i].velocidad_by = vy;
-			balas[i].alto = alto_bala;
-			balas[i].ancho = ancho_bala;
-
-			balas[i].frame_actual = 0;
-			balas[i].contador_animacion = 0;
-
-			balas[i].activa = true;
-			p->municion--;
-			return true;
-		}
-	}
-	return false;
-}
- 
 void dibujar_balas_mapa(bala balas[], float camara_x, float camara_y) {
 	int i;
 	for (i = 0; i < max_balas_p; i++) {

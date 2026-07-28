@@ -12,8 +12,6 @@
 #define alto_bala 10.0f
 #define ancho_bala 10.0f
 
-
-
 typedef struct {
 	float x, y;
     float alto;
@@ -29,7 +27,6 @@ typedef struct {
 typedef struct personaje personaje;
 
 void dibujar_bala(bala* b, float camara_x, float camara_y);
-bool crear_bala(personaje* p, bala balas[]);
 void spawn_balas(bala balas[]);
 void dibujar_balas_mapa(bala balas[], float camara_x, float camara_y);
 void fisicas_balas(bala balas[]);
@@ -37,4 +34,5 @@ void fisicas_balas(bala balas[]);
 bool cargar_sprites_balas(void);
 void liberar_sprites_balas(void);
 void actualizar_animacion_bala(bala* b);
+
 #endif
