@@ -1,5 +1,6 @@
 #include "balas.h"
 #include "personaje.h"
+#include "items.h"
 #include <allegro5/allegro5.h>
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_ttf.h>
@@ -9,6 +10,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
+#include <math.h>
 #include "mapa.h"
 #define max_balas_p 3
 
@@ -63,6 +65,10 @@ void spawn_balas(bala balas[]) { //inicializa balas
 		balas[i].frame_actual = 0;
 		balas[i].contador_animacion = 0;
 
+		balas[i].x_inicio = 0;
+		balas[i].y_inicio = 0;
+		balas[i].rango = 0;
+
 		balas[i].activa = false;
 	}
 }
@@ -76,16 +82,43 @@ void dibujar_balas_mapa(bala balas[], float camara_x, float camara_y) {
 	}
 }
 
-void fisicas_balas(bala balas[]) {
+void fisicas_balas(bala balas[], item items[]) {
 	int i;
+
+	float nueva_x;
+	float nueva_y;
+
+	float dx;
+	float dy;
+	float distancia_recorrida;
 
 	for (i = 0; i < max_balas_p; i++) {
 		if (balas[i].activa == true) {
 
 			actualizar_animacion_bala(&balas[i]);
-			float nueva_x = balas[i].x + balas[i].velocidad_bx;
-			float nueva_y = balas[i].y + balas[i].velocidad_by;
+			nueva_x = balas[i].x + balas[i].velocidad_bx;
+			nueva_y = balas[i].y + balas[i].velocidad_by;
 
+			if (balas[i].rango > 0) {
+
+				dx = nueva_x - balas[i].x_inicio;
+				dy = nueva_y - balas[i].y_inicio;
+
+				distancia_recorrida = sqrt(dx * dx + dy * dy);
+
+				if (distancia_recorrida >= balas[i].rango) {
+					balas[i].activa = false;
+					continue;
+				}
+			}
+			if (romper_caja((int)nueva_x, (int)nueva_y, items) ||
+				romper_caja((int)(nueva_x + balas[i].ancho), (int)nueva_y, items) ||
+				romper_caja((int)nueva_x, (int)(nueva_y + balas[i].alto), items) ||
+				romper_caja((int)(nueva_x + balas[i].ancho), (int)(nueva_y + balas[i].alto), items)) {
+
+				balas[i].activa = false;
+				continue;
+			}
 			if (fisicas_mapa((int)nueva_x, (int)nueva_y) ||										  //A
 				fisicas_mapa((int)(nueva_x + balas[i].ancho), (int)nueva_y) ||					  //B	
 				fisicas_mapa((int)nueva_x, (int)(nueva_y + balas[i].alto)) ||					  //C
@@ -93,6 +126,7 @@ void fisicas_balas(bala balas[]) {
 
 				balas[i].activa = false;
 			}
+
 			else {
 				balas[i].x = nueva_x;
 				balas[i].y = nueva_y;

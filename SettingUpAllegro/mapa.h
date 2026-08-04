@@ -43,7 +43,7 @@ typedef struct {
 } plataforma_movil;
 
 typedef struct personaje personaje;
-
+typedef struct item item;
 extern char mapa[filas][columnas];
 
 
@@ -64,6 +64,8 @@ void mov_plat_moviles(plataforma_movil plataformas_moviles[10]);
 void dibujo_plat_mov(plataforma_movil plataformas_moviles[], float camara_x, float camara_y);
 void colision_plat_personaje(personaje* p, plataforma_movil plataformas_moviles[]);
 int dano_plat(personaje* p);
-int cargar_mapa(const char* txt);
+int cargar_mapa(const char* txt, int* llaves);
+
+int romper_caja(int x, int y, item items[]);
 
 #endif

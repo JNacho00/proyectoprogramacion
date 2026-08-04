@@ -1,8 +1,9 @@
 #ifndef ranking_h
 #define ranking_h
 #include "personaje.h"
-#define max_jugadores 50
+#define max_registros_leidos 50
 #define max_nombre 20
+#define max_ingresos 11
 
 
 typedef struct {

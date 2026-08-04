@@ -2,6 +2,7 @@
 #include "mapa.h"
 #include "enemigos.h"
 #include "balas.h"
+#include "sonidos.h"
 #include <stdio.h>
 #include <allegro5/allegro_image.h>
 #include <stdbool.h>
@@ -16,6 +17,7 @@ ALLEGRO_BITMAP* sprite_municion = NULL;
 ALLEGRO_BITMAP* sprite_escudo = NULL;
 ALLEGRO_BITMAP* sprite_barril = NULL;
 ALLEGRO_BITMAP* frames_llave[FRAMES_LLAVE];
+ALLEGRO_BITMAP* s_explosion_barril[5];
 
 void inicializar_items(item items[]) {
     int i;
@@ -35,6 +37,10 @@ void inicializar_items(item items[]) {
 
         items[i].frame_actual = 0;
         items[i].contador_animacion = 0;
+
+        items[i].explotando = false;
+        items[i].frame_explosion = 0;
+        items[i].contador_explosion = 0;
 
         items[i].tipo = 0;
         items[i].valor = 0;
@@ -83,7 +89,7 @@ void crear_item(item items[], float x, float y, tipo_item tipo, int valor) {
     }
 }
 
-void spawn_items(item items[]) {
+void spawn_items(item items[], personaje* p) {
     int fila;
     int col;
 
@@ -126,6 +132,12 @@ void spawn_items(item items[]) {
 
                 mapa[fila][col] = '.';
             }
+            if (mapa[fila][col] == '!') {
+
+                crear_item(items, col * ancho_v, fila * largo_v, GRANADA, 4);
+
+                mapa[fila][col] = '.';
+            }
         }
     }
 }
@@ -158,6 +170,10 @@ void actualizar_items(item items[], personaje* p) {
         if (items[i].activo == true) {
             actualizar_animacion_item(&items[i]);
             mover_item(&items[i]);
+            if (items[i].explotando == true) {
+                actualizar_animacion_explosion_barril(&items[i]);
+                continue;
+            }
             if (interaccion_item(&items[i], p)) {
 
                 if (items[i].tipo == VIDA) {
@@ -166,7 +182,7 @@ void actualizar_items(item items[], personaje* p) {
                     if (p->vida > p->vida_max) {
                         p->vida = p->vida_max;
                     }
-
+                    reproducir_vida_escudo();
                     items[i].activo = false;
                 }
 
@@ -177,7 +193,7 @@ void actualizar_items(item items[], personaje* p) {
                 }
 
                 if (items[i].tipo == LLAVE) {
-                    p->agarro_llave = true;
+                    p->llave++;
                     items[i].activo = false;
                 }
 
@@ -187,11 +203,17 @@ void actualizar_items(item items[], personaje* p) {
                     if (p->escudo > p->escudo_max) {
                         p->escudo = p->escudo_max;
                     }
-
+                    reproducir_vida_escudo();
                     items[i].activo = false;
                 }
                 if (items[i].tipo == MONEDA) {
                     p->puntaje += items[i].valor;
+                    reproducir_moneda();
+                    items[i].activo = false;
+                }
+
+                if (items[i].tipo == GRANADA) {
+                    p->municion_granadas += items[i].valor;
 
                     items[i].activo = false;
                 }
@@ -300,18 +322,33 @@ void dibujar_item(item* i, float camara_x, float camara_y) {
             al_map_rgb(255, 220, 0)
         );
     }
+    if (i->tipo == GRANADA) {
+        al_draw_filled_rectangle(
+            i->x - camara_x,
+            i->y - camara_y,
+            i->x - camara_x + i->ancho,
+            i->y - camara_y + i->alto,
+            al_map_rgb(255, 220, 255)
+        );
+    }
 
 }
 
 void dibujar_items(item items[], float camara_x, float camara_y) {
-	int i;
+    int i;
 
-	for (i = 0; i < max_items; i++) {
+    for (i = 0; i < max_items; i++) {
 
-		if (items[i].activo == true) {
-			dibujar_item(&items[i], camara_x, camara_y);
-		}
-	}
+        if (items[i].activo == true) {
+
+            if (items[i].explotando == true) {
+                dibujar_explosion_barril(&items[i], camara_x, camara_y);
+            }
+            else {
+                dibujar_item(&items[i], camara_x, camara_y);
+            }
+        }
+    }
 }
 
 bool colision_bala_item(bala* b, item* i) {
@@ -339,7 +376,7 @@ bool colision_bala_item(bala* b, item* i) {
 void explosion_barril(item* barril, enemigo enemigos[], personaje* p) {
     int i;
 
-    float rango_explosion = 300.0f;
+    float rango_explosion = 200.0f;
 
     float explosion_izq = barril->x - rango_explosion;
     float explosion_der = barril->x + barril->ancho + rango_explosion;
@@ -364,7 +401,10 @@ void explosion_barril(item* barril, enemigo enemigos[], personaje* p) {
             }
         }
     }
-    barril->activo = false;
+    barril->explotando = true;
+    barril->frame_explosion = 0;
+    barril->contador_explosion = 0;
+
 }
 
 void colision_bala_barril(item items[], bala balas[], enemigo enemigos[], personaje* p) {
@@ -373,7 +413,7 @@ void colision_bala_barril(item items[], bala balas[], enemigo enemigos[], person
 
     for (i = 0; i < max_items; i++) {
 
-        if (items[i].activo == true && items[i].tipo == BARRIL) {
+        if (items[i].activo == true && items[i].tipo == BARRIL && items[i].explotando == false) {
 
             for (j = 0; j < max_balas_p; j++) {
 
@@ -382,6 +422,7 @@ void colision_bala_barril(item items[], bala balas[], enemigo enemigos[], person
                     if (colision_bala_item(&balas[j], &items[i])) {
                         balas[j].activa = false;
                         explosion_barril(&items[i], enemigos, p);
+                        reproducir_explosion();
                         break;
                     }
                 }
@@ -439,6 +480,20 @@ bool cargar_sprites_items(void) {
             return false;
         }
     }
+
+    s_explosion_barril[0] = al_load_bitmap("assets/explosiones/explosion_barril1.png");
+    s_explosion_barril[1] = al_load_bitmap("assets/explosiones/explosion_barril2.png");
+    s_explosion_barril[2] = al_load_bitmap("assets/explosiones/explosion_barril3.png");
+    s_explosion_barril[3] = al_load_bitmap("assets/explosiones/explosion_barril4.png");
+    s_explosion_barril[4] = al_load_bitmap("assets/explosiones/explosion_barril5.png");
+
+    for (int i = 0; i < 5; i++) {
+        if (s_explosion_barril[i] == NULL) {
+            printf("No se pudo cargar explosion_barril %d\n", i);
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -467,6 +522,12 @@ void liberar_sprites_items(void) {
         if (frames_llave[i] != NULL) {
             al_destroy_bitmap(frames_llave[i]);
             frames_llave[i] = NULL;
+        }
+    }
+    for (int i = 0; i < 5; i++) {
+        if (s_explosion_barril[i] != NULL) {
+            al_destroy_bitmap(s_explosion_barril[i]);
+            s_explosion_barril[i] = NULL;
         }
     }
 }
@@ -518,4 +579,59 @@ void mover_item(item* i) {
     if (i->y <= i->y_inicio) {
         i->direccion_y = 1;
     }
+}
+
+void actualizar_animacion_explosion_barril(item* i) {
+
+    if (i->explotando == true) {
+
+        i->contador_explosion++;
+
+        if (i->contador_explosion >= 3) {
+            i->contador_explosion = 0;
+            i->frame_explosion++;
+        }
+
+        if (i->frame_explosion >= 5) {
+            i->frame_explosion = 4;
+            i->explotando = false;
+            i->activo = false;
+        }
+    }
+}
+
+void dibujar_explosion_barril(item* i, float camara_x, float camara_y) {
+
+    ALLEGRO_BITMAP* sprite;
+    float centro_x;
+    float base_y;
+    float dibujo_x;
+    float dibujo_y;
+
+    if (i->explotando == false) {
+        return;
+    }
+
+    sprite = s_explosion_barril[i->frame_explosion];
+
+    if (sprite == NULL) {
+        return;
+    }
+
+    centro_x = i->x + i->ancho / 2.0f;
+
+    // Esta será la línea fija de abajo
+    base_y = i->y + i->alto;
+
+    dibujo_x = centro_x - al_get_bitmap_width(sprite) / 2.0f;
+
+    // La parte de abajo del sprite queda siempre en base_y
+    dibujo_y = base_y - al_get_bitmap_height(sprite);
+
+    al_draw_bitmap(
+        sprite,
+        dibujo_x - camara_x,
+        dibujo_y - camara_y,
+        0
+    );
 }

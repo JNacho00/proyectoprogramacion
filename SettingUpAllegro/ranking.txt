@@ -1,7 +1,10 @@
-nklsdfndlss;4750
-lsjsnvkjsc;0
-adkakd anjan jand;5200
-nacho oo;6100
-juanito;3650
-pablo;2050
-ola alo;400
+Jugador;17150
+Jugador;15800
+hola;15700
+Jugador;14400
+Jugador;14350
+Jugador;13900
+Jugador;8900
+Jugador;7050
+Jugador;6450
+Jugador;4800

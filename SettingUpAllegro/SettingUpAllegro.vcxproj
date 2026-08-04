@@ -75,6 +75,8 @@
     <Allegro_AddonFont>true</Allegro_AddonFont>
     <Allegro_AddonImage>true</Allegro_AddonImage>
     <Allegro_AddonPrimitives>true</Allegro_AddonPrimitives>
+    <Allegro_AddonAudio>true</Allegro_AddonAudio>
+    <Allegro_AddonAcodec>true</Allegro_AddonAcodec>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -121,6 +123,9 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>allegro_audio.lib
+;allegro_acodec.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Users\jkcre\source\repos\SettingUpAllegro\packages\Allegro.5.2.11.3\build\native\v145\x64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
@@ -151,24 +156,29 @@
     <ClCompile Include="alleg.c" />
     <ClCompile Include="balas.c" />
     <ClCompile Include="enemigos.c" />
+    <ClCompile Include="granadas.c" />
     <ClCompile Include="items.c" />
     <ClCompile Include="mapa.c" />
     <ClCompile Include="personaje.c" />
     <ClCompile Include="plataformas.c" />
     <ClCompile Include="ranking.c" />
+    <ClCompile Include="sonidos.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="balas.h" />
     <ClInclude Include="enemigos.h" />
+    <ClInclude Include="granadas.h" />
     <ClInclude Include="items.h" />
     <ClInclude Include="mapa.h" />
     <ClInclude Include="personaje.h" />
     <ClInclude Include="plataformas.h" />
     <ClInclude Include="ranking.h" />
+    <ClInclude Include="sonidos.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="mapa1.txt" />
     <Text Include="mapa2.txt" />
+    <Text Include="mapa3.txt" />
     <Text Include="ranking.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

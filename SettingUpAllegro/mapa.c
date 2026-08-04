@@ -9,6 +9,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "mapa.h"
+#include "items.h"
 
 ALLEGRO_BITMAP* sprite_calle = NULL;
 ALLEGRO_BITMAP* tierra1 = NULL;
@@ -17,6 +18,11 @@ ALLEGRO_BITMAP* tierra3 = NULL;
 ALLEGRO_BITMAP* tierram2 = NULL;
 ALLEGRO_BITMAP* pasto = NULL;
 ALLEGRO_BITMAP* fondo = NULL;
+ALLEGRO_BITMAP* sprite_calle1 = NULL;
+ALLEGRO_BITMAP* sprite_calle2 = NULL;
+ALLEGRO_BITMAP* sprite_calle3 = NULL;
+ALLEGRO_BITMAP* sprite_columna_calle = NULL;
+ALLEGRO_BITMAP* sprite_pilar_columna = NULL;
 
 char mapa[filas][columnas];
 
@@ -247,6 +253,22 @@ int fisicas_mapa(int pos_x, int pos_y) {
         return 1;
     case 'y':
         return 1;
+    case 'u':
+        return 1;
+    case 'i':
+        return 1;
+    case 'w':
+        return 1;
+    case 'Q':
+        return 1;
+    case 'H':
+        return 1;
+    case 'O':
+        return 1;
+    case 'N':
+        return 1;
+    case '?':
+        return 1;
     }
 
     return 0;
@@ -331,6 +353,116 @@ void dibujar_mapa(float camara_x, float camara_y) {
                     y + largo_v,
                     al_map_rgb(0, 200, 255));
                 break;
+            case 'u':
+                al_draw_scaled_bitmap(
+                    sprite_calle1,
+                    0,
+                    0,
+                    al_get_bitmap_width(sprite_calle1),
+                    al_get_bitmap_height(sprite_calle1),
+                    x,
+                    y,
+                    ancho_v,
+                    largo_v,
+                    0
+                );
+                break;
+            case 'i':
+                al_draw_scaled_bitmap(
+                    sprite_calle2,
+                    0,
+                    0,
+                    al_get_bitmap_width(sprite_calle2),
+                    al_get_bitmap_height(sprite_calle2),
+                    x,
+                    y,
+                    ancho_v,
+                    largo_v,
+                    0
+                );
+                break;
+            case 'w':
+                al_draw_scaled_bitmap(
+                    sprite_calle3,
+                    0,
+                    0,
+                    al_get_bitmap_width(sprite_calle3),
+                    al_get_bitmap_height(sprite_calle3),
+                    x,
+                    y,
+                    ancho_v,
+                    largo_v,
+                    0
+                );
+                break;
+            case 'I':
+                al_draw_scaled_bitmap(
+                    sprite_columna_calle,
+                    0,
+                    0,
+                    al_get_bitmap_width(sprite_columna_calle),
+                    al_get_bitmap_height(sprite_columna_calle),
+                    x,
+                    y,
+                    ancho_v,
+                    largo_v,
+                    0
+                );
+                break;
+            case 'g':
+                al_draw_scaled_bitmap(
+                    sprite_pilar_columna,
+                    0,
+                    0,
+                    al_get_bitmap_width(sprite_pilar_columna),
+                    al_get_bitmap_height(sprite_pilar_columna),
+                    x,
+                    y,
+                    ancho_v,
+                    largo_v,
+                    0
+                );
+                break;
+            case 'Q':
+                al_draw_filled_rectangle(
+                    x,
+                    y,
+                    x + ancho_v,
+                    y + largo_v,
+                    al_map_rgb(0, 200, 255)
+                );
+            case 'H':
+                al_draw_filled_rectangle(
+                    x,
+                    y,
+                    x + ancho_v,
+                    y + largo_v,
+                    al_map_rgb(0, 200, 255)
+                );
+            case 'O':
+                al_draw_filled_rectangle(
+                    x,
+                    y,
+                    x + ancho_v,
+                    y + largo_v,
+                    al_map_rgb(0, 200, 255)
+                );
+            case 'N':
+                al_draw_filled_rectangle(
+                    x,
+                    y,
+                    x + ancho_v,
+                    y + largo_v,
+                    al_map_rgb(0, 200, 255)
+                );
+            case '?':
+                al_draw_filled_rectangle(
+                    x,
+                    y,
+                    x + ancho_v,
+                    y + largo_v,
+                    al_map_rgb(0, 200, 255)
+                );
             }
         }
     }
@@ -364,9 +496,6 @@ int dano_plat(personaje* p) {
     return 0;
 }
 
-
-
-
 void romper_plataforma(int fila) {
     int j;
 
@@ -399,6 +528,36 @@ sprite_calle = al_load_bitmap("assets/sprite_calle1.png");
         return false;
     }
 
+    sprite_calle1 = al_load_bitmap("assets/mapa 2/calle1.png");
+    sprite_calle2 = al_load_bitmap("assets/mapa 2/calle2.png");
+    sprite_calle3 = al_load_bitmap("assets/mapa 2/calle3.png");
+    sprite_columna_calle = al_load_bitmap("assets/mapa 2/columna_calle.png");
+    sprite_pilar_columna = al_load_bitmap("assets/mapa 2/pilar_columna.png");
+    
+    if (sprite_calle1 == NULL) {
+        printf("No se pudo cargar calle1.png\n");
+        return false;
+    }
+
+    if (sprite_calle2 == NULL) {
+        printf("No se pudo cargar calle2.png\n");
+        return false;
+    }
+
+    if (sprite_calle3 == NULL) {
+        printf("No se pudo cargar calle3.png\n");
+        return false;
+    }
+
+    if (sprite_columna_calle == NULL) {
+        printf("No se pudo cargar columna_calle.png\n");
+        return false;
+    }
+
+    if (sprite_pilar_columna == NULL) {
+        printf("No se pudo cargar pilar_columna.png\n");
+        return false;
+    }
     return true;
 }
 
@@ -482,7 +641,7 @@ bool portal(personaje* p) {
     col = centro_x / ancho_v;
     fila = centro_y / largo_v;
 
-    if (p->agarro_llave == false) {
+    if (p->llave < p->llaves_nivel) {
         return false;
     }
 
@@ -518,8 +677,8 @@ bool cargar_fondos(int nivel) {
 
     return true;
 }
-
-int cargar_mapa(const char* txt) {
+/*
+int cargar_mapa(const char* txt, int* llaves) {
     FILE* f;
     int i;
     int c;
@@ -531,6 +690,9 @@ int cargar_mapa(const char* txt) {
         return 0;
     }
 
+    fscanf(f, "%d\n", llaves);
+
+
     for (i = 0; i < filas; i++) {
         for (c = 0; c < columnas; c++) {
             fscanf(f, "%c", &mapa[i][c]);
@@ -541,4 +703,78 @@ int cargar_mapa(const char* txt) {
 
     fclose(f);
     return 1;
+}
+*/
+int cargar_mapa(const char* txt, int* llaves_necesarias) {
+    FILE* f;
+    char linea[columnas + 5];
+    int fila;
+    int col;
+
+    f = fopen(txt, "r");
+
+    if (f == NULL) {
+        printf("No se pudo abrir el archivo: %s\n", txt);
+        return 0;
+    }
+
+    fscanf(f, "%d", llaves_necesarias);
+    fgetc(f); // consume el salto de linea despues del numero
+
+    for (fila = 0; fila < filas; fila++) {
+
+        if (fgets(linea, sizeof(linea), f) == NULL) {
+            printf("Error: faltan filas en el mapa\n");
+            fclose(f);
+            return 0;
+        }
+
+        for (col = 0; col < columnas; col++) {
+            mapa[fila][col] = linea[col];
+        }
+    }
+
+    fclose(f);
+    return 1;
+}
+
+int romper_caja(int x, int y, item items[]) {
+    int col;
+    int f;
+    char caja;
+    col = x / ancho_v;
+    f = y / largo_v;
+
+    if (f < 0 || f >= filas || col < 0 || col >= columnas) {
+        return 0;
+    }
+
+    caja = mapa[f][col];
+
+    if (mapa[f][col] == 'Q' ||
+        mapa[f][col] == 'H' ||
+        mapa[f][col] == 'N' ||
+        mapa[f][col] == '?' ||
+        mapa[f][col] == 'O') {
+
+        mapa[f][col] = '.';
+
+        if (caja == 'Q') {
+            crear_item(items, col * ancho_v, (f - 1) * largo_v, ESCUDO, 5);
+        }
+        if (caja == 'H') {
+            crear_item(items, col * ancho_v, (f - 1) * largo_v, MONEDA, 2000);
+        }
+        if (caja == 'N') {
+            crear_item(items, col * ancho_v, (f - 1) * largo_v, GRANADA, 3);
+        }
+        if (caja == '?') {
+            crear_item(items, col * ancho_v, (f - 1) * largo_v, LLAVE, 1);
+        }
+
+
+        return 1;
+    }
+
+    return 0;
 }

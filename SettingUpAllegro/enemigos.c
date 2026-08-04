@@ -2,6 +2,7 @@
 #include "personaje.h"
 #include "mapa.h"
 #include "balas.h"
+#include "sonidos.h"
 
 #define ancho_enemigo 40
 #define alto_enemigo 40
@@ -525,6 +526,14 @@ bool colision_bala_enemigo(bala* b, enemigo* e, personaje* p) {
     }
 
     e->vida -= 1;
+    if (e->tipo == zombie_n) {
+        reproducir_dano_zombie();
+    }
+
+    if (e->tipo == zombie_r) {
+        reproducir_dano_zombie();
+    }
+
     b->activa = false;
 
     if (e->vida <= 0) {
@@ -841,6 +850,7 @@ void actualizar_ataque_enemigo(enemigo* e, personaje* p) {
 
         if (e->cooldown_ataque == 0) {
             recibir_dano_personaje(p, e->dano);
+            reproducir_dano_personaje();
             e->cooldown_ataque = coold_at;
         }
     }
@@ -992,6 +1002,7 @@ void disparo_zombie_v(enemigo enemigos[], personaje* p) {
                 }
                 if (enemigos[i].cooldown_disparo == 0) {
                     disparo_enemigo_v(&enemigos[i], enemigos[i].balas_enemigo, p);
+                    reproducir_disparo();
                     enemigos[i].cooldown_disparo = 30;
                 }
             }
@@ -1010,8 +1021,8 @@ void disparo_zombie_d(enemigo enemigos[], personaje* p) {
         if (enemigos[i].activo == true) {
             if (enemigos[i].tipo == zombie_d) {
                 jugador_delante = false;
-                distanciax = (p->x - p->ancho / 2.0f) - (enemigos[i].x + enemigos[i].ancho / 2.0f);
-                distanciay = (p->y - p->alto / 2.0f) - (enemigos[i].y + enemigos[i].alto / 2.0f);
+                distanciax = (p->x + p->ancho / 2.0f) - (enemigos[i].x + enemigos[i].ancho / 2.0f);
+                distanciay = (p->y + p->alto / 2.0f) - (enemigos[i].y + enemigos[i].alto / 2.0f);
 
                 if (distanciax < 0) {
                     distanciax = distanciax * -1;
@@ -1019,11 +1030,11 @@ void disparo_zombie_d(enemigo enemigos[], personaje* p) {
                 if (distanciay < 0) {
                     distanciay = distanciay * -1;
                 }
-                if (enemigos[i].direccionx == 1 && (p->x - p->ancho / 2.0f) > (enemigos[i].x + enemigos[i].ancho / 2.0f)) {
+                if (enemigos[i].direccionx == 1 && (p->x + p->ancho / 2.0f) > (enemigos[i].x + enemigos[i].ancho / 2.0f)) {
                     jugador_delante = true;
                 }
 
-                if (enemigos[i].direccionx == -1 && (p->x - p->ancho / 2.0f) < (enemigos[i].x + enemigos[i].ancho / 2.0f)) {
+                if (enemigos[i].direccionx == -1 && (p->x + p->ancho / 2.0f) < (enemigos[i].x + enemigos[i].ancho / 2.0f)) {
                     jugador_delante = true;
                 }
 
@@ -1036,6 +1047,7 @@ void disparo_zombie_d(enemigo enemigos[], personaje* p) {
                 }
                 if (enemigos[i].cooldown_disparo == 0) {
                     disparo_enemgio(&enemigos[i], enemigos[i].balas_enemigo, p);
+                    reproducir_disparo();
                     enemigos[i].cooldown_disparo = 80;
                 }
             }
@@ -1071,7 +1083,103 @@ void revisar_colison_bala_personaje(bala balas_enemigo[], personaje* p, int dano
         if (balas_enemigo[i].activa == true) {
             if (colision_bala_personaje(&balas_enemigo[i], p) == true) {
                 recibir_dano_personaje(p, dano);
+                reproducir_dano_personaje();
                 balas_enemigo[i].activa = false;
+            }
+        }
+    }
+}
+
+bool colision_granada_enemigo(granada* g, enemigo* e) {
+
+    if (g->x + g->ancho < e->x) {
+        return false;
+    }
+
+    if (g->x > e->x + e->ancho) {
+        return false;
+    }
+
+    if (g->y + g->alto < e->y) {
+        return false;
+    }
+
+    if (g->y > e->y + e->alto) {
+        return false;
+    }
+
+    return true;
+}
+
+void explosion_granada(granada* g, enemigo enemigos[], personaje* p) {
+    int i;
+    int dano_granada = 3;
+
+    float explosion_izq;
+    float explosion_der;
+    float explosion_arriba;
+    float explosion_abajo;
+
+    explosion_izq = g->x - g->rango_explosion;
+    explosion_der = g->x + g->ancho + g->rango_explosion;
+    explosion_arriba = g->y - g->rango_explosion;
+    explosion_abajo = g->y + g->alto + g->rango_explosion;
+
+    for (i = 0; i < max_enemigos; i++) {
+
+        if (enemigos[i].activo == true) {
+
+            if (enemigos[i].x < explosion_der &&
+                enemigos[i].x + enemigos[i].ancho > explosion_izq &&
+                enemigos[i].y < explosion_abajo &&
+                enemigos[i].y + enemigos[i].alto > explosion_arriba) {
+
+                enemigos[i].vida -= dano_granada;
+                if (enemigos[i].tipo == zombie_n) {
+                    reproducir_dano_zombie();
+                }
+
+                if (enemigos[i].tipo == zombie_r) {
+                    reproducir_dano_zombie();
+                }
+
+                if (enemigos[i].vida <= 0) {
+                    enemigos[i].vida = 0;
+                    enemigos[i].activo = false;
+                    p->puntaje += enemigos[i].puntos;
+                }
+            }
+        }
+    }
+
+    g->activa = false;
+    g->explotar = false;
+}
+
+void revisar_colisiones_granada_enemigo(enemigo enemigos[], granada granadas[], personaje* p) {
+    int i;
+    int j;
+
+    for (i = 0; i < max_granadas_p; i++) {
+
+        if (granadas[i].activa == true) {
+
+            if (granadas[i].explotar == true) {
+                explosion_granada(&granadas[i], enemigos, p);
+                reproducir_explosion();
+            }
+            else {
+                for (j = 0; j < max_enemigos; j++) {
+
+                    if (enemigos[j].activo == true) {
+
+                        if (colision_granada_enemigo(&granadas[i], &enemigos[j])) {
+                            explosion_granada(&granadas[i], enemigos, p);
+                            reproducir_explosion();
+                            break;
+                        }
+                    }
+                }
             }
         }
     }

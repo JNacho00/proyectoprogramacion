@@ -160,6 +160,9 @@ void spawn_personaje(personaje* p) {
                 p->escudo_max = 10;
                 p->escudo = p->escudo_max;
                 p->municion = 10;
+                p->municion_granadas = 0;
+                p->llave = 0;
+                p->llaves_nivel = 0;
                 p->agarro_llave = false;
 
                 p->animacion = ANIM_IDLE;
@@ -470,7 +473,7 @@ bool cargar_sprites_personaje(void) {
     return true;
 }
 
-void disparo_mouse(personaje* p, float mouse_x, float mouse_y, float camara_x, float camara_y) {
+bool disparo_mouse(personaje* p, float mouse_x, float mouse_y, float camara_x, float camara_y, float zoom) {
     
     int i;
 
@@ -485,12 +488,12 @@ void disparo_mouse(personaje* p, float mouse_x, float mouse_y, float camara_x, f
     float distancia;
 
     if (p->municion <= 0) {
-        return;
+        return false;
     }
 
     // donde esta el cursor segun event.mouse
-    mouse_mapa_x = mouse_x + camara_x;
-    mouse_mapa_y = mouse_y + camara_y;
+    mouse_mapa_x = mouse_x / zoom + camara_x;
+    mouse_mapa_y = mouse_y / zoom + camara_y;
 
     centro_jugador_x = p->x + p->ancho / 2.0f;
     centro_jugador_y = p->y + p->alto / 2.0f;
@@ -502,13 +505,16 @@ void disparo_mouse(personaje* p, float mouse_x, float mouse_y, float camara_x, f
     distancia = sqrt(dx * dx + dy * dy);
 
     if (distancia == 0) {
-        return;
+        return false;
     }
 
     for (i = 0; i < max_balas_p; i++) {
         if (p->balas[i].activa == false) {
             p->balas[i].x = centro_jugador_x;
             p->balas[i].y = centro_jugador_y;
+            p->balas[i].x_inicio = centro_jugador_x;
+            p->balas[i].y_inicio = centro_jugador_y;
+            p->balas[i].rango = 500.0f;
             p->balas[i].ancho = ancho_bala;
             p->balas[i].alto = alto_bala;
 
@@ -521,9 +527,68 @@ void disparo_mouse(personaje* p, float mouse_x, float mouse_y, float camara_x, f
 
             p->municion--;
 
-            return;
+            return true;
         }
     }
+    return false;
+}
+
+bool disparo_granada_mouse(personaje* p, float mouse_x, float mouse_y, float camara_x, float camara_y, float zoom) {
+    int i;
+
+    float mouse_mapa_x;
+    float mouse_mapa_y;
+
+    float centro_jugador_x;
+    float centro_jugador_y;
+
+    float dx;
+    float dy;
+    float distancia;
+
+    if (p->municion_granadas <= 0) {
+        return false;
+    }
+
+    mouse_mapa_x = mouse_x / zoom + camara_x;
+    mouse_mapa_y = mouse_y / zoom + camara_y;
+
+    centro_jugador_x = p->x + p->ancho / 2.0f;
+    centro_jugador_y = p->y + p->alto / 2.0f;
+
+    dx = mouse_mapa_x - centro_jugador_x;
+    dy = mouse_mapa_y - centro_jugador_y;
+
+    distancia = sqrt(dx * dx + dy * dy);
+
+    if (distancia == 0) {
+        return false;
+    }
+
+    for (i = 0; i < max_granadas_p; i++) {
+        if (p->granadas[i].activa == false) {
+
+            p->granadas[i].x = centro_jugador_x;
+            p->granadas[i].y = centro_jugador_y;
+
+            p->granadas[i].ancho = 20;
+            p->granadas[i].alto = 20;
+
+            p->granadas[i].velocidad_gx = (dx / distancia) * 8.0f;
+            p->granadas[i].velocidad_gy = (dy / distancia) * 8.0f - 4.0f;
+
+            p->granadas[i].frame_actual = 0;
+            p->granadas[i].contador_animacion = 0;
+
+            p->granadas[i].activa = true;
+            p->granadas[i].explotar = false;
+
+            p->municion_granadas--;
+
+            return true;
+        }
+    }
+    return false;
 }
 
 void sombra_personaje(personaje* p, float camara_x, float camara_y) {
@@ -536,4 +601,8 @@ void sombra_personaje(personaje* p, float camara_x, float camara_y) {
     al_draw_filled_ellipse(centro_jugador_X, centro_jugador_y,
                            p->ancho * 1.0f, p->alto * 1.0f,
                            al_map_rgba(60, 60, 60, 80));
+
+    al_draw_ellipse(centro_jugador_X, centro_jugador_y,
+        p->ancho * 1.0f, p->alto * 1.0f,
+        al_map_rgba(20, 80, 80, 80), 10);
 }

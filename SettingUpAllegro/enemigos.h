@@ -87,4 +87,8 @@ void disparo_zombie_d(enemigo enemigos[], personaje* p);
 void disparo_enemigo_v(enemigo* e, bala balas_enemigo[], personaje* p);
 void disparo_zombie_v(enemigo enemigos[], personaje* p);
 
+bool colision_granada_enemigo(granada* g, enemigo* e);
+void explosion_granada(granada* g, enemigo enemigos[], personaje* p);
+void revisar_colisiones_granada_enemigo(enemigo enemigos[], granada granadas[], personaje* p);
+
 #endif

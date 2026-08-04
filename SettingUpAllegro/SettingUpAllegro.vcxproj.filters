@@ -42,6 +42,12 @@
     <ClCompile Include="ranking.c">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
+    <ClCompile Include="granadas.c">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
+    <ClCompile Include="sonidos.c">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="personaje.h">
@@ -65,6 +71,12 @@
     <ClInclude Include="ranking.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
+    <ClInclude Include="granadas.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="sonidos.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="mapa1.txt">
@@ -74,6 +86,9 @@
       <Filter>Archivos de recursos</Filter>
     </Text>
     <Text Include="ranking.txt">
+      <Filter>Archivos de recursos</Filter>
+    </Text>
+    <Text Include="mapa3.txt">
       <Filter>Archivos de recursos</Filter>
     </Text>
   </ItemGroup>

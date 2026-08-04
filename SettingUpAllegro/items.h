@@ -20,10 +20,11 @@ typedef enum {
 	BARRIL,
 	LLAVE,
 	MONEDA,
+	GRANADA,
 
 } tipo_item;
 
-typedef struct {
+typedef struct item{
 	float x, y;
 	int ancho;
 	int alto;
@@ -36,6 +37,11 @@ typedef struct {
 
 	int frame_actual;
 	int contador_animacion;
+
+	//para el barril
+	bool explotando;
+	int frame_explosion;
+	int contador_explosion;
 
 	tipo_item tipo;
 	bool activo;
@@ -60,5 +66,8 @@ bool cargar_sprites_items(void);
 void liberar_sprites_items(void);
 void actualizar_animacion_item(item* i);
 void mover_item(item* i);
+void actualizar_animacion_explosion_barril(item* i);
+void dibujar_explosion_barril(item* i, float camara_x, float camara_y);
+
 
 #endif 
