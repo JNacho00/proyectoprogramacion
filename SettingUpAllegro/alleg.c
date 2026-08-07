@@ -28,6 +28,7 @@ typedef enum {
     INGRESAR_NOMBRE,
     JUGANDO,
     GAME_OVER,
+    VICTORIA,
     RANKING,
     SALIR,
 
@@ -51,7 +52,9 @@ void dibujar_game_over(ALLEGRO_BITMAP* fondo_game_over, ALLEGRO_FONT* fuente_men
 void dibujar_ranking(registros_ranking ranking[], int cantidad, int limite, ALLEGRO_FONT* fuente, float x, float y);
 void dibujar_ingresar_nombre(ALLEGRO_FONT* fuente_menu, ALLEGRO_BITMAP* fondo_menu, char nombre_jugador[]);
 void dibujar_municion(personaje* p, ALLEGRO_FONT* fuente);
-void dibujar_introduccion(ALLEGRO_FONT* fuente_menu, ALLEGRO_BITMAP* fondo_menu, ALLEGRO_BITMAP* imagen_introduccion);// -----------main--------------------
+void dibujar_introduccion(ALLEGRO_FONT* fuente_menu, ALLEGRO_BITMAP* fondo_menu, ALLEGRO_BITMAP* imagen_introduccion);
+void dibujar_victoria(ALLEGRO_BITMAP* fondo_victoria, ALLEGRO_FONT* fuente_menu, personaje* p);
+// -----------main--------------------
 int main() {
     
     flujo_juego mijuego;
@@ -79,6 +82,7 @@ int main() {
     ALLEGRO_BITMAP* fondo_game_over = NULL;
     ALLEGRO_BITMAP* fondo_ranking = NULL;
     ALLEGRO_BITMAP* imagen_introduccion = NULL;
+    ALLEGRO_BITMAP* fondo_victoria = NULL;
 
     if (inicializar_sistema(&mijuego) == false) {
         fprintf(stderr, "Error");
@@ -119,10 +123,17 @@ int main() {
         return -1;
     }
 
-    imagen_introduccion = al_load_bitmap("assets/intro.png");
+    imagen_introduccion = al_load_bitmap("assets/intro1.png");
 
     if (imagen_introduccion == NULL) {
         printf("No se pudo cargar guia_rapida.png\n");
+        return -1;
+    }
+
+    fondo_victoria = al_load_bitmap("assets/fondo_victoria.png");
+
+    if (fondo_victoria == NULL) {
+        printf("No se pudo cargar fondo_victoria.png\n");
         return -1;
     }
 
@@ -157,8 +168,12 @@ int main() {
         cerrar_sistema(&mijuego);
         return -1;
     }
+
+    if (cargar_sprites_granadas() == false) {
+        return -1;
+    }
  
-    int nivel_actual = 1;
+    int nivel_actual = 4;
     char nombre_jugador[max_nombre] = "";
     int letras_nombre = 0;
 
@@ -186,16 +201,17 @@ int main() {
             dano_plat(&jugador);
             mov_plat_moviles(plataformas_moviles);
             colision_plat_personaje(&jugador, plataformas_moviles);
+            actualizar_animacion_final_personaje(&jugador);
 
             if (portal(&jugador)) {
                 nivel_actual++;
                 jugador.puntaje += 1000;
-                if (nivel_actual == 4) {
+                if (nivel_actual == 5) {
                     if (puntaje_guardado == false) {
                         guardar_registro_ranking(nombre_jugador, jugador.puntaje);
                         puntaje_guardado = true;
                     }
-                    estado = GAME_OVER;
+                    estado = VICTORIA;
                 }
                 else {
                     cargar_nivel(nivel_actual, &jugador, enemigos, items, plataformas_moviles);
@@ -266,7 +282,7 @@ int main() {
             disparo_zombie_d(enemigos, &jugador);
             disparo_zombie_v(enemigos, &jugador);
             fisicas_balas(jugador.balas, items);
-            fisicas_granadas(jugador.granadas);
+            fisicas_granadas(jugador.granadas, items);
             for (int i = 0; i < max_enemigos; i++) {
                 fisicas_balas(enemigos[i].balas_enemigo, items);
             }
@@ -350,7 +366,6 @@ int main() {
                 }
             }
 ////////////////////////////////////////////////////////////////////////nombre///////////////////////////////////////////////////////
-
             else if (estado == INGRESAR_NOMBRE) {
 
                 if (event.keyboard.keycode == ALLEGRO_KEY_ENTER) {
@@ -411,6 +426,11 @@ int main() {
                     estado = MENU;
                 }
             }
+            else if (estado == VICTORIA) {
+                if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE) {
+                    estado = MENU;
+                }
+}
         }
 ////////////////////////////////////////////////////////////////////////////////mouse////////////////////////////////////////////////
         else if (event.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
@@ -469,8 +489,14 @@ int main() {
                 al_use_transform(&transform);
 
                 dibujar_fondo(camara_x);
-
+                if (nivel_actual == 1) {
+                    dibujar_mansiones_nivel1(camara_x, camara_y);
+                }
+                if (nivel_actual == 4) {
+                    dibujar_decoraciones_nivel4(camara_x, camara_y);
+                }
                 dibujar_mapa(camara_x, camara_y);
+                dibujar_portal_mapa(camara_x, camara_y, &jugador);
                 dibujar_items(items, camara_x, camara_y);
                 dibujo_plat_mov(plataformas_moviles, camara_x, camara_y);
                 dibujar_enemigos_mapa(enemigos, camara_x, camara_y);
@@ -490,6 +516,17 @@ int main() {
             }
             else if (estado == GAME_OVER) {
                 dibujar_game_over(fondo_game_over, fuente_menu, &jugador);
+                registros_ranking ranking[max_registros_leidos];
+                int cont;
+
+                cont = leer_ranking(ranking, max_registros_leidos);
+                ordenar_ranking(ranking, cont);
+
+                dibujar_ranking(ranking, cont, 5, fuente_menu, 600, 430);
+            }
+            else if (estado == VICTORIA) {
+                dibujar_victoria(fondo_victoria, fuente_menu, &jugador);
+
                 registros_ranking ranking[max_registros_leidos];
                 int cont;
 
@@ -541,17 +578,17 @@ int main() {
     liberar_sprites_balas();
     liberar_sprites_items();
     liberar_sonidos();
+    liberar_sprites_granadas();
     al_destroy_bitmap(fondo_menu);
     al_destroy_bitmap(fondo_game_over);
     al_destroy_font(fuente_titulo);
     al_destroy_font(fuente_menu);
     al_destroy_bitmap(fondo_ranking);
+    al_destroy_bitmap(fondo_victoria);
     cerrar_sistema(&mijuego);
 
     return 0;
 }
-
-
 
 //funciones----------------------------
 
@@ -593,7 +630,19 @@ void cerrar_sistema(flujo_juego* j) {
 void cargar_nivel(int nivel, personaje* p, enemigo enemigos[], item items[], plataforma_movil plataformas_moviles[]) {
     char txt[100];
     int llaves_necesarias;
-    mapas(txt, nivel);
+
+    if (nivel == 1) {
+        strcpy(txt, "mapa1.txt");
+    }
+    else if (nivel == 2) {
+        strcpy(txt, "mapa2.txt");
+    }
+    else if (nivel == 3) {
+        strcpy(txt, "mapa3.txt");
+    }
+    else if (nivel == 4) {
+        strcpy(txt, "mapa4.txt");
+    }
 
     cargar_mapa(txt, &llaves_necesarias);
 
@@ -961,5 +1010,42 @@ void dibujar_introduccion(ALLEGRO_FONT* fuente_menu, ALLEGRO_BITMAP* fondo_menu,
         705,
         ALLEGRO_ALIGN_CENTER,
         "ESC - VOLVER"
+    );
+}
+
+void dibujar_victoria(ALLEGRO_BITMAP* fondo_victoria, ALLEGRO_FONT* fuente_menu, personaje* p) {
+    char texto_puntaje[50];
+
+    al_draw_scaled_bitmap(
+        fondo_victoria,
+        0,
+        0,
+        al_get_bitmap_width(fondo_victoria),
+        al_get_bitmap_height(fondo_victoria),
+        0,
+        0,
+        1200,
+        800,
+        0
+    );
+
+    sprintf(texto_puntaje, "Puntaje final: %d", p->puntaje);
+
+    al_draw_text(
+        fuente_menu,
+        al_map_rgb(255, 255, 255),
+        600,
+        320,
+        ALLEGRO_ALIGN_CENTER,
+        texto_puntaje
+    );
+
+    al_draw_text(
+        fuente_menu,
+        al_map_rgb(255, 220, 0),
+        600,
+        700,
+        ALLEGRO_ALIGN_CENTER,
+        "ESC - VOLVER AL MENU"
     );
 }

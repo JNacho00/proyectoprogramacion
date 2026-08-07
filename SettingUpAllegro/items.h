@@ -10,7 +10,7 @@
 #include "balas.h"
 #include "enemigos.h"
 
-#define max_items 10
+#define max_items 20
 
 typedef enum {
 
@@ -38,7 +38,6 @@ typedef struct item{
 	int frame_actual;
 	int contador_animacion;
 
-	//para el barril
 	bool explotando;
 	int frame_explosion;
 	int contador_explosion;

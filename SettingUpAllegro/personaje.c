@@ -1,5 +1,4 @@
 #define _CRT_SECURE_NO_WARNINGS
-
 #include "personaje.h"
 #include <allegro5/allegro5.h>
 #include <allegro5/allegro_font.h>
@@ -8,6 +7,7 @@
 #include <allegro5/allegro_physfs.h>
 #include <allegro5/allegro_image.h>
 #include <stdio.h>
+#include <math.h>
 #include <stdbool.h>
 #define spawn_personajex 'o'
 #define t_invulnerable 60
@@ -19,6 +19,12 @@
 #define CAMBIO_FRAME_IDLE 15
 #define CAMBIO_FRAME_CORRER 10
 #define CAMBIO_FRAME_SALTAR 20
+
+#define FRAMES_DISPARAR 3
+#define TIEMPO_DISPARO 12
+#define DISPARO_FRENTE 0
+#define DISPARO_ABAJO 1
+#define DISPARO_ARRIBA 2
 
 static ALLEGRO_BITMAP* frames_idle[FRAMES_IDLE] = {
     NULL, NULL, NULL, NULL
@@ -32,11 +38,22 @@ static ALLEGRO_BITMAP* frames_saltar[FRAMES_SALTAR] = {
     NULL, NULL, NULL, NULL, NULL
 };
 
+static ALLEGRO_BITMAP* frames_disparar[FRAMES_DISPARAR] = {
+    NULL, NULL, NULL
+};
+
 void dibujo_personaje(personaje* p, float camara_x, float camara_y) {
     ALLEGRO_BITMAP* sprite = NULL;
     int flags = 0;
 
-    if (p->animacion == ANIM_CORRER) {
+    if (p->mira_derecha == false) {
+        flags = ALLEGRO_FLIP_HORIZONTAL;
+    }
+
+    if (p->tiempo_disparo > 0) {
+        sprite = frames_disparar[p->frame_disparo];
+    }
+    else if (p->animacion == ANIM_CORRER) {
         sprite = frames_correr[p->frame_actual];
     }
     else if (p->animacion == ANIM_SALTAR) {
@@ -44,10 +61,6 @@ void dibujo_personaje(personaje* p, float camara_x, float camara_y) {
     }
     else {
         sprite = frames_idle[p->frame_actual];
-    }
-
-    if (p->mira_derecha == false) {
-        flags = ALLEGRO_FLIP_HORIZONTAL;
     }
 
     if (sprite != NULL) {
@@ -160,7 +173,7 @@ void spawn_personaje(personaje* p) {
                 p->escudo_max = 10;
                 p->escudo = p->escudo_max;
                 p->municion = 10;
-                p->municion_granadas = 0;
+                p->municion_granadas = 1;
                 p->llave = 0;
                 p->llaves_nivel = 0;
                 p->agarro_llave = false;
@@ -168,6 +181,8 @@ void spawn_personaje(personaje* p) {
                 p->animacion = ANIM_IDLE;
                 p->frame_actual = 0;
                 p->contador_animacion = 0;
+                p->frame_disparo = DISPARO_FRENTE;
+                p->tiempo_disparo = 0;
                 p->mira_derecha = true;
 
                 mapa[f][c] = '.'; 
@@ -269,6 +284,11 @@ void actualizar_animacion_personaje(personaje* p, bool se_mueve) {
     tipo_animacion nueva_animacion;
     int total_frames;
     int cambio_frame;
+
+    if (p->tiempo_disparo > 0) {
+        p->tiempo_disparo--;
+    }
+
 
     if (p->en_suelo == false) {
         nueva_animacion = ANIM_SALTAR;
@@ -384,10 +404,6 @@ void fisicas(personaje* p) {
        }
    }
 
-   se_mueve = p->x != x_antes;
-
-   actualizar_animacion_personaje(p, se_mueve);
-
 }
 
 void liberar_sprites_personaje(void) {
@@ -411,6 +427,13 @@ void liberar_sprites_personaje(void) {
         if (frames_saltar[i] != NULL) {
             al_destroy_bitmap(frames_saltar[i]);
             frames_saltar[i] = NULL;
+        }
+    }
+
+    for (i = 0; i < FRAMES_DISPARAR; i++) {
+        if (frames_disparar[i] != NULL) {
+            al_destroy_bitmap(frames_disparar[i]);
+            frames_disparar[i] = NULL;
         }
     }
 }
@@ -437,6 +460,12 @@ bool cargar_sprites_personaje(void) {
         "assets/personaje/personajesalto3.png",
         "assets/personaje/personajesalto4.png",
         "assets/personaje/personajesalto5.png"
+    };
+
+    const char* disparar[FRAMES_DISPARAR] = {
+    "assets/personaje/personaje_disparando_frente.png",
+    "assets/personaje/personaje_disparando_abajo.png",
+    "assets/personaje/personaje_disparando_arriba.png"
     };
 
     int i;
@@ -470,11 +499,22 @@ bool cargar_sprites_personaje(void) {
             return false;
         }
     }
+
+    for (i = 0; i < FRAMES_DISPARAR; i++) {
+        frames_disparar[i] = al_load_bitmap(disparar[i]);
+
+        if (frames_disparar[i] == NULL) {
+            printf("No se pudo cargar frame disparar %d\n", i + 1);
+            liberar_sprites_personaje();
+            return false;
+        }
+    }
+
     return true;
 }
 
 bool disparo_mouse(personaje* p, float mouse_x, float mouse_y, float camara_x, float camara_y, float zoom) {
-    
+
     int i;
 
     float mouse_mapa_x;
@@ -491,14 +531,12 @@ bool disparo_mouse(personaje* p, float mouse_x, float mouse_y, float camara_x, f
         return false;
     }
 
-    // donde esta el cursor segun event.mouse
     mouse_mapa_x = mouse_x / zoom + camara_x;
     mouse_mapa_y = mouse_y / zoom + camara_y;
 
     centro_jugador_x = p->x + p->ancho / 2.0f;
     centro_jugador_y = p->y + p->alto / 2.0f;
 
-    // direccion de la bala
     dx = mouse_mapa_x - centro_jugador_x;
     dy = mouse_mapa_y - centro_jugador_y;
 
@@ -510,6 +548,7 @@ bool disparo_mouse(personaje* p, float mouse_x, float mouse_y, float camara_x, f
 
     for (i = 0; i < max_balas_p; i++) {
         if (p->balas[i].activa == false) {
+
             p->balas[i].x = centro_jugador_x;
             p->balas[i].y = centro_jugador_y;
             p->balas[i].x_inicio = centro_jugador_x;
@@ -525,11 +564,31 @@ bool disparo_mouse(personaje* p, float mouse_x, float mouse_y, float camara_x, f
             p->balas[i].contador_animacion = 0;
             p->balas[i].activa = true;
 
+            if (dx < 0) {
+                p->mira_derecha = false;
+            }
+            else if (dx > 0) {
+                p->mira_derecha = true;
+            }
+
+            if (dy > 25.0f) {
+                p->frame_disparo = DISPARO_ABAJO;
+            }
+            else if (dy < -25.0f) {
+                p->frame_disparo = DISPARO_ARRIBA;
+            }
+            else {
+                p->frame_disparo = DISPARO_FRENTE;
+            }
+
+            p->tiempo_disparo = TIEMPO_DISPARO;
+
             p->municion--;
 
             return true;
         }
     }
+
     return false;
 }
 
@@ -605,4 +664,18 @@ void sombra_personaje(personaje* p, float camara_x, float camara_y) {
     al_draw_ellipse(centro_jugador_X, centro_jugador_y,
         p->ancho * 1.0f, p->alto * 1.0f,
         al_map_rgba(20, 80, 80, 80), 10);
+}
+
+void actualizar_animacion_final_personaje(personaje* p) {
+    ALLEGRO_KEYBOARD_STATE key_state;
+    bool se_mueve = false;
+
+    al_get_keyboard_state(&key_state);
+
+    if (al_key_down(&key_state, ALLEGRO_KEY_A) ||
+        al_key_down(&key_state, ALLEGRO_KEY_D)) {
+        se_mueve = true;
+    }
+
+    actualizar_animacion_personaje(p, se_mueve);
 }

@@ -1,10 +1,10 @@
+Jugador;37050
 Jugador;17150
+Jugador;16250
+Jugador;16050
 Jugador;15800
 hola;15700
 Jugador;14400
 Jugador;14350
 Jugador;13900
-Jugador;8900
-Jugador;7050
-Jugador;6450
-Jugador;4800
+Jugador;11950

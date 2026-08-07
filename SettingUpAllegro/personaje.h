@@ -53,6 +53,9 @@ struct personaje {
     int frame_actual;
     int contador_animacion;
 
+    int frame_disparo;
+    int tiempo_disparo;
+
     bool mira_derecha;
     bool en_suelo;
     bool agarro_llave;
@@ -75,6 +78,6 @@ void dibujar_puntaje(personaje* p, ALLEGRO_FONT* fuente);
 bool disparo_mouse(personaje* p, float mouse_x, float mouse_y, float camara_x, float camara_y, float zoom);
 
 bool disparo_granada_mouse(personaje* p, float mouse_x, float mouse_y, float camara_x, float camara_y, float zoom);
-
+void actualizar_animacion_final_personaje(personaje* p);
 
 #endif

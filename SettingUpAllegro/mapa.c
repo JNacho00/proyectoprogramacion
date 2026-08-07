@@ -23,6 +23,23 @@ ALLEGRO_BITMAP* sprite_calle2 = NULL;
 ALLEGRO_BITMAP* sprite_calle3 = NULL;
 ALLEGRO_BITMAP* sprite_columna_calle = NULL;
 ALLEGRO_BITMAP* sprite_pilar_columna = NULL;
+ALLEGRO_BITMAP* mansion1 = NULL;
+ALLEGRO_BITMAP* mansion2 = NULL;
+ALLEGRO_BITMAP* mansion3 = NULL;
+ALLEGRO_BITMAP* sprite_noria = NULL;
+ALLEGRO_BITMAP* edificio1 = NULL;
+ALLEGRO_BITMAP* edificio2 = NULL;
+ALLEGRO_BITMAP* edificio3 = NULL;
+ALLEGRO_BITMAP* edificio4 = NULL;
+ALLEGRO_BITMAP* edificio5 = NULL;
+ALLEGRO_BITMAP* sprite_edificio6 = NULL;
+ALLEGRO_BITMAP* sprite_caseta = NULL;
+ALLEGRO_BITMAP* sprite_barrera = NULL;
+ALLEGRO_BITMAP* sprite_plat_movil = NULL;
+ALLEGRO_BITMAP* sprite_trampa = NULL;
+ALLEGRO_BITMAP* sprite_caja_rompible = NULL;
+ALLEGRO_BITMAP* sprite_portal_cerrado = NULL;
+ALLEGRO_BITMAP* sprite_portal_abierto = NULL;
 
 char mapa[filas][columnas];
 
@@ -61,7 +78,7 @@ void crear_plat_novil(plataforma_movil plataformas_moviles[], float x, float y, 
             if (tipo == PLAT_VERTICAL) {
                 plataformas_moviles[i].y_inicio = y;
                 plataformas_moviles[i].direccion_y = 1;
-                plataformas_moviles[i].distancia = 150;
+                plataformas_moviles[i].distancia = 250;
                 plataformas_moviles[i].velocidad_y = 1.0f;
             }
             if (tipo == PLAT_HORIZ) {
@@ -133,41 +150,37 @@ void mov_plat_moviles(plataforma_movil plataformas_moviles[10]) {
 
 void dibujo_plat_mov(plataforma_movil plataformas_moviles[], float camara_x, float camara_y) {
     int i;
-    float x, y;
 
     for (i = 0; i < max_plat; i++) {
 
         if (plataformas_moviles[i].activa == true) {
-            if (plataformas_moviles[i].tipo == PLAT_VERTICAL) {
 
-                x = plataformas_moviles[i].x - camara_x;
-                y = plataformas_moviles[i].y - camara_y;
-
+            if (sprite_plat_movil != NULL) {
+                al_draw_scaled_bitmap(
+                    sprite_plat_movil,
+                    0,
+                    0,
+                    al_get_bitmap_width(sprite_plat_movil),
+                    al_get_bitmap_height(sprite_plat_movil),
+                    plataformas_moviles[i].x - camara_x,
+                    plataformas_moviles[i].y - camara_y,
+                    plataformas_moviles[i].ancho,
+                    plataformas_moviles[i].alto,
+                    0
+                );
+            }
+            else {
                 al_draw_filled_rectangle(
-                    x,
-                    y,
-                    x + plataformas_moviles[i].ancho,
-                    y + plataformas_moviles[i].alto,
-                    al_map_rgb(255, 255, 255)
+                    plataformas_moviles[i].x - camara_x,
+                    plataformas_moviles[i].y - camara_y,
+                    plataformas_moviles[i].x - camara_x + plataformas_moviles[i].ancho,
+                    plataformas_moviles[i].y - camara_y + plataformas_moviles[i].alto,
+                    al_map_rgb(150, 150, 150)
                 );
             }
         }
-        if (plataformas_moviles[i].tipo == PLAT_HORIZ) {
-
-            x = plataformas_moviles[i].x - camara_x;
-            y = plataformas_moviles[i].y - camara_y;
-
-            al_draw_filled_rectangle(
-                x,
-                y,
-                x + plataformas_moviles[i].ancho,
-                y + plataformas_moviles[i].alto,
-                al_map_rgb(255, 255, 255)
-            );
-        }   
     }
 }
-
 
 void colision_plat_personaje(personaje* p, plataforma_movil plataformas_moviles[]) {
     int i;
@@ -269,6 +282,8 @@ int fisicas_mapa(int pos_x, int pos_y) {
         return 1;
     case '?':
         return 1;
+    case '{':
+        return 1;
     }
 
     return 0;
@@ -330,15 +345,6 @@ void dibujar_mapa(float camara_x, float camara_y) {
             case 'C':
                 al_draw_bitmap(tierra3, x, y, 0);
                 break;
-            case 'Z':
-                al_draw_filled_rectangle(
-                    x,
-                    y,
-                    x + ancho_v,
-                    y + largo_v,
-                    al_map_rgb(0, 200, 255)
-                );
-                break;
             case 'T':
                 al_draw_bitmap(tierram2, x, y, 0);
                 break;
@@ -346,12 +352,18 @@ void dibujar_mapa(float camara_x, float camara_y) {
                 al_draw_bitmap(pasto, x, y, 0);
                 break;
             case 'x':
-                al_draw_filled_rectangle(
+                al_draw_scaled_bitmap(
+                sprite_trampa,
+                    0,
+                    0,
+                    al_get_bitmap_width(sprite_trampa),
+                    al_get_bitmap_height(sprite_trampa),
                     x,
                     y,
-                    x + ancho_v,
-                    y + largo_v,
-                    al_map_rgb(0, 200, 255));
+                    ancho_v,
+                    largo_v,
+                    0
+                    );
                 break;
             case 'u':
                 al_draw_scaled_bitmap(
@@ -432,37 +444,65 @@ void dibujar_mapa(float camara_x, float camara_y) {
                     al_map_rgb(0, 200, 255)
                 );
             case 'H':
-                al_draw_filled_rectangle(
+                al_draw_scaled_bitmap(
+                    sprite_caja_rompible,
+                    0,
+                    0,
+                    al_get_bitmap_width(sprite_caja_rompible),
+                    al_get_bitmap_height(sprite_caja_rompible),
                     x,
                     y,
-                    x + ancho_v,
-                    y + largo_v,
-                    al_map_rgb(0, 200, 255)
+                    ancho_v,
+                    largo_v,
+                    0
                 );
             case 'O':
-                al_draw_filled_rectangle(
+                al_draw_scaled_bitmap(
+                    sprite_caja_rompible,
+                    0,
+                    0,
+                    al_get_bitmap_width(sprite_caja_rompible),
+                    al_get_bitmap_height(sprite_caja_rompible),
                     x,
                     y,
-                    x + ancho_v,
-                    y + largo_v,
-                    al_map_rgb(0, 200, 255)
+                    ancho_v,
+                    largo_v,
+                    0
                 );
             case 'N':
-                al_draw_filled_rectangle(
+                al_draw_scaled_bitmap(
+                    sprite_caja_rompible,
+                    0,
+                    0,
+                    al_get_bitmap_width(sprite_caja_rompible),
+                    al_get_bitmap_height(sprite_caja_rompible),
                     x,
                     y,
-                    x + ancho_v,
-                    y + largo_v,
-                    al_map_rgb(0, 200, 255)
+                    ancho_v,
+                    largo_v,
+                    0
                 );
             case '?':
+                al_draw_scaled_bitmap(
+                    sprite_caja_rompible,
+                    0,
+                    0,
+                    al_get_bitmap_width(sprite_caja_rompible),
+                    al_get_bitmap_height(sprite_caja_rompible),
+                    x,
+                    y,
+                    ancho_v,
+                    largo_v,
+                    0
+                );
+            /*case '{':
                 al_draw_filled_rectangle(
                     x,
                     y,
                     x + ancho_v,
                     y + largo_v,
                     al_map_rgb(0, 200, 255)
-                );
+                );*/ 
             }
         }
     }
@@ -558,6 +598,106 @@ sprite_calle = al_load_bitmap("assets/sprite_calle1.png");
         printf("No se pudo cargar pilar_columna.png\n");
         return false;
     }
+    mansion1 = al_load_bitmap("assets/mapa 1/mansion1.png");
+    mansion2 = al_load_bitmap("assets/mapa 1/mansion2.png");
+    mansion3 = al_load_bitmap("assets/mapa 1/mansion3.png");
+
+    if (mansion1 == NULL) {
+        printf("No se pudo cargar mansion1.png\n");
+        return false;
+    }
+
+    if (mansion2 == NULL) {
+        printf("No se pudo cargar mansion2.png\n");
+        return false;
+    }
+
+    if (mansion3 == NULL) {
+        printf("No se pudo cargar mansion3.png\n");
+        return false;
+    }
+
+    sprite_noria = al_load_bitmap("assets/mapa 1/noria.png");
+
+    if (sprite_noria == NULL) {
+        printf("No se pudo cargar noria.png\n");
+        return false;
+    }
+    edificio1 = al_load_bitmap("assets/mapa4/edificio1.png");
+    edificio2 = al_load_bitmap("assets/mapa4/edificio2.png");
+    edificio3 = al_load_bitmap("assets/mapa4/edificio3.png");
+    edificio4 = al_load_bitmap("assets/mapa4/edificio4.png");
+    edificio5 = al_load_bitmap("assets/mapa4/edificio5.png");
+
+    if (edificio1 == NULL) {
+        printf("No se pudo cargar edificio1.png\n");
+        return false;
+    }
+
+    if (edificio2 == NULL) {
+        printf("No se pudo cargar edificio2.png\n");
+        return false;
+    }
+
+    if (edificio3 == NULL) {
+        printf("No se pudo cargar edificio3.png\n");
+        return false;
+    }
+
+    if (edificio4 == NULL) {
+        printf("No se pudo cargar edificio4.png\n");
+        return false;
+    }
+
+    if (edificio5 == NULL) {
+        printf("No se pudo cargar edificio5.png\n");
+        return false;
+    }
+
+    sprite_edificio6 = al_load_bitmap("assets/mapa4/edificio6.png");
+
+    if (sprite_edificio6 == NULL) {
+        printf("No se pudo cargar edificio6.png\n");
+        return false;
+    }
+
+    sprite_caseta = al_load_bitmap("assets/mapa4/caseta.png");
+    sprite_barrera = al_load_bitmap("assets/mapa4/barrera.png");
+
+    sprite_plat_movil = al_load_bitmap("assets/plat_movil.png");
+
+    if (sprite_plat_movil == NULL) {
+        printf("No se pudo cargar plat_movil.png\n");
+        return false;
+    }
+
+    sprite_trampa = al_load_bitmap("assets/trampa.png");
+
+    if (sprite_trampa == NULL) {
+        printf("No se pudo cargar el sprite del bloque de trampa\n");
+        return false;
+    }
+
+    sprite_caja_rompible = al_load_bitmap("assets/caja.png");
+    if (sprite_caja_rompible == NULL) {
+        printf("No se pudo cargar sprite_caja_rompible\n");
+        return false;
+    }
+
+    sprite_portal_cerrado = al_load_bitmap("assets/puerta_cerrada.png");
+    sprite_portal_abierto = al_load_bitmap("assets/puerta_abierta.png");
+
+    if (sprite_portal_cerrado == NULL) {
+        printf("No se pudo cargar portal_cerrado.png\n");
+        return false;
+    }
+
+    if (sprite_portal_abierto == NULL) {
+        printf("No se pudo cargar portal_abierto.png\n");
+        return false;
+    }
+
+
     return true;
 }
 
@@ -591,6 +731,75 @@ void liberar_sprites_mapa() {
     if (fondo != NULL) {
         al_destroy_bitmap(fondo);
         fondo = NULL;
+    }
+
+    if (sprite_noria != NULL) {
+        al_destroy_bitmap(sprite_noria);
+        sprite_noria = NULL;
+    }
+
+    if (edificio1 != NULL) {
+        al_destroy_bitmap(edificio1);
+        edificio1 = NULL;
+    }
+
+    if (edificio2 != NULL) {
+        al_destroy_bitmap(edificio2);
+        edificio2 = NULL;
+    }
+
+    if (edificio3 != NULL) {
+        al_destroy_bitmap(edificio3);
+        edificio3 = NULL;
+    }
+
+    if (edificio4 != NULL) {
+        al_destroy_bitmap(edificio4);
+        edificio4 = NULL;
+    }
+
+    if (edificio5 != NULL) {
+        al_destroy_bitmap(edificio5);
+        edificio5 = NULL;
+    }
+    if (sprite_edificio6 != NULL) {
+        al_destroy_bitmap(sprite_edificio6);
+        sprite_edificio6 = NULL;
+    }
+
+    if (sprite_caseta != NULL) {
+        al_destroy_bitmap(sprite_caseta);
+        sprite_caseta = NULL;
+    }
+
+    if (sprite_barrera != NULL) {
+        al_destroy_bitmap(sprite_barrera);
+        sprite_barrera = NULL;
+    }
+
+    if (sprite_plat_movil != NULL) {
+        al_destroy_bitmap(sprite_plat_movil);
+        sprite_plat_movil = NULL;
+    }
+
+    if (sprite_trampa != NULL) {
+        al_destroy_bitmap(sprite_trampa);
+        sprite_trampa = NULL;
+    }
+
+    if (sprite_caja_rompible != NULL) {
+        al_destroy_bitmap(sprite_caja_rompible);
+        sprite_caja_rompible = NULL;
+    }
+
+    if (sprite_portal_cerrado != NULL) {
+        al_destroy_bitmap(sprite_portal_cerrado);
+        sprite_portal_cerrado = NULL;
+    }
+
+    if (sprite_portal_abierto != NULL) {
+        al_destroy_bitmap(sprite_portal_abierto);
+        sprite_portal_abierto = NULL;
     }
 }
 
@@ -664,10 +873,16 @@ bool cargar_fondos(int nivel) {
     }
 
     if (nivel == 1) {
-        fondo = al_load_bitmap("assets/imagen_fondo2.png");
+        fondo = al_load_bitmap("assets/fondo 5.png");
     }
     else if (nivel == 2) {
         fondo = al_load_bitmap("assets/fondo2.png");
+    }
+    else if (nivel == 3) {
+        fondo = al_load_bitmap("assets/fondol3.png");
+    }
+    else if (nivel == 4) {
+        fondo = al_load_bitmap("assets/mapa4/fondom4.png");
     }
 
     if (fondo == NULL) {
@@ -677,37 +892,10 @@ bool cargar_fondos(int nivel) {
 
     return true;
 }
-/*
-int cargar_mapa(const char* txt, int* llaves) {
-    FILE* f;
-    int i;
-    int c;
 
-    f = fopen(txt, "r");
-
-    if (f == NULL) {
-        printf("No se pudo abrir el archivo: %s\n", txt);
-        return 0;
-    }
-
-    fscanf(f, "%d\n", llaves);
-
-
-    for (i = 0; i < filas; i++) {
-        for (c = 0; c < columnas; c++) {
-            fscanf(f, "%c", &mapa[i][c]);
-        }
-    }
-
-    
-
-    fclose(f);
-    return 1;
-}
-*/
 int cargar_mapa(const char* txt, int* llaves_necesarias) {
     FILE* f;
-    char linea[columnas + 5];
+    char linea[columnas + 1];
     int fila;
     int col;
 
@@ -719,7 +907,7 @@ int cargar_mapa(const char* txt, int* llaves_necesarias) {
     }
 
     fscanf(f, "%d", llaves_necesarias);
-    fgetc(f); // consume el salto de linea despues del numero
+    fgetc(f); 
 
     for (fila = 0; fila < filas; fila++) {
 
@@ -777,4 +965,265 @@ int romper_caja(int x, int y, item items[]) {
     }
 
     return 0;
+}
+
+void dibujar_mansion(ALLEGRO_BITMAP* mansion, float x, float y, float ancho, float alto, float camara_x, float camara_y) {
+
+    if (mansion == NULL) {
+        return;
+    }
+
+    al_draw_scaled_bitmap(
+        mansion,
+        0,
+        0,
+        al_get_bitmap_width(mansion),
+        al_get_bitmap_height(mansion),
+        x - camara_x,
+        y - camara_y,
+        ancho,
+        alto,
+        0
+    );
+}
+
+void dibujar_mansiones_nivel1(float camara_x, float camara_y) {
+
+    dibujar_mansion(
+        mansion1,
+        0,
+        460,
+        900,
+        420,
+        camara_x,
+        camara_y
+    );
+
+    dibujar_mansion(
+        mansion2,
+        1300,
+        445,
+        850,
+        400,
+        camara_x,
+        camara_y
+    );
+
+    dibujar_mansion(
+        mansion3,
+        2600,
+        482,
+        900,
+        410,
+        camara_x,
+        camara_y
+    );
+
+    if (sprite_noria != NULL) {
+        al_draw_scaled_bitmap(
+            sprite_noria,
+            0,
+            0,
+            al_get_bitmap_width(sprite_noria),
+            al_get_bitmap_height(sprite_noria),
+            3600 - camara_x,
+            430 - camara_y,
+            300,
+            420,
+            0
+        );
+    }
+}
+
+void dibujar_decoraciones_nivel4(float camara_x, float camara_y) {
+
+    dibujar_mansion(
+        edificio1,
+        50,
+        258,
+        850,
+        560,
+        camara_x,
+        camara_y
+    );
+
+    dibujar_mansion(
+        edificio2,
+        870,
+        160,
+        500,
+        700,
+        camara_x,
+        camara_y
+    );
+
+    dibujar_mansion(
+        edificio3,
+        1400,
+        117,
+        560,
+        720,
+        camara_x,
+        camara_y
+    );
+
+    dibujar_mansion(
+        edificio4,
+        2000,
+        175,
+        480,
+        680,
+        camara_x,
+        camara_y
+    );
+
+    dibujar_mansion(
+        edificio5,
+        2470,
+        130,
+        430,
+        700,
+        camara_x,
+        camara_y
+    );
+
+    if (sprite_edificio6 != NULL) {
+        al_draw_scaled_bitmap(
+            sprite_edificio6,
+            0,
+            0,
+            al_get_bitmap_width(sprite_edificio6),
+            al_get_bitmap_height(sprite_edificio6),
+            3100 - camara_x,
+            45 - camara_y,
+            420,
+            850,
+            0
+        );
+    }
+
+    al_draw_scaled_bitmap(
+        sprite_caseta,
+        0,
+        0,
+        al_get_bitmap_width(sprite_caseta),
+        al_get_bitmap_height(sprite_caseta),
+        3570 - camara_x,
+        580 - camara_y,
+        420,
+        320,
+        0
+    );
+
+    al_draw_scaled_bitmap(
+        sprite_barrera,
+        0,
+        0,
+        al_get_bitmap_width(sprite_barrera),
+        al_get_bitmap_height(sprite_barrera),
+        3520 - camara_x,
+        395 - camara_y,
+        90,
+        520,
+        0
+    );
+}
+
+void dibujar_portal_mapa(float camara_x, float camara_y, personaje* p) {
+    int fila;
+    int col;
+    ALLEGRO_BITMAP* sprite;
+    float x;
+    float y;
+    float alto_dibujo;
+    float ancho_dibujo;
+
+    for (fila = 0; fila < filas; fila++) {
+        for (col = 0; col < columnas; col++) {
+
+            if (mapa[fila][col] == 'Z') {
+
+                if (p->llave >= p->llaves_nivel) {
+                    sprite = sprite_portal_abierto;
+                }
+                else {
+                    sprite = sprite_portal_cerrado;
+                }
+
+                if (sprite == NULL) {
+                    return;
+                }
+
+                alto_dibujo = 80.0f;
+
+                ancho_dibujo = alto_dibujo *
+                    al_get_bitmap_width(sprite) /
+                    al_get_bitmap_height(sprite);
+
+                x = col * ancho_v - camara_x;
+                y = fila * largo_v - camara_y;
+
+                al_draw_scaled_bitmap(
+                    sprite,
+                    0,
+                    0,
+                    al_get_bitmap_width(sprite),
+                    al_get_bitmap_height(sprite),
+
+                    x - (ancho_dibujo - ancho_v) / 2.0f,
+                    y - (alto_dibujo - largo_v) +10,
+
+                    ancho_dibujo,
+                    alto_dibujo,
+                    0
+                );
+            }
+        }
+    }
+}
+
+void romper_cajas_granada(float centro_x, float centro_y, int rango, item items[]) {
+    int col_inicio;
+    int col_fin;
+    int fila_inicio;
+    int fila_fin;
+
+    int fila;
+    int col;
+
+    col_inicio = (int)(centro_x - rango) / ancho_v;
+    col_fin = (int)(centro_x + rango) / ancho_v;
+
+    fila_inicio = (int)(centro_y - rango) / largo_v;
+    fila_fin = (int)(centro_y + rango) / largo_v;
+
+    if (col_inicio < 0) {
+        col_inicio = 0;
+    }
+
+    if (fila_inicio < 0) {
+        fila_inicio = 0;
+    }
+
+    if (col_fin >= columnas) {
+        col_fin = columnas - 1;
+    }
+
+    if (fila_fin >= filas) {
+        fila_fin = filas - 1;
+    }
+
+    for (fila = fila_inicio; fila <= fila_fin; fila++) {
+        for (col = col_inicio; col <= col_fin; col++) {
+
+            if (mapa[fila][col] == 'Q' ||
+                mapa[fila][col] == 'H' ||
+                mapa[fila][col] == 'N' ||
+                mapa[fila][col] == '?' ||
+                mapa[fila][col] == 'O') {
+
+                romper_caja(col * ancho_v, fila * largo_v, items);
+            }
+        }
+    }
 }

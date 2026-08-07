@@ -1152,8 +1152,9 @@ void explosion_granada(granada* g, enemigo enemigos[], personaje* p) {
         }
     }
 
-    g->activa = false;
-    g->explotar = false;
+    g->explotar = true;
+    g->velocidad_gx = 0;
+    g->velocidad_gy = 0;
 }
 
 void revisar_colisiones_granada_enemigo(enemigo enemigos[], granada granadas[], personaje* p) {
@@ -1176,6 +1177,13 @@ void revisar_colisiones_granada_enemigo(enemigo enemigos[], granada granadas[], 
                         if (colision_granada_enemigo(&granadas[i], &enemigos[j])) {
                             explosion_granada(&granadas[i], enemigos, p);
                             reproducir_explosion();
+
+                            granadas[i].explotar = true;
+                            granadas[i].frame_explosion = 0;
+                            granadas[i].contador_explosion = 0;
+                            granadas[i].velocidad_gx = 0;
+                            granadas[i].velocidad_gy = 0;
+
                             break;
                         }
                     }

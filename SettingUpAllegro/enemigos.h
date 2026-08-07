@@ -8,7 +8,7 @@
 #include <allegro5/allegro_physfs.h>
 #include <stdio.h>
 #include <stdbool.h>
-#define max_enemigos 20
+#define max_enemigos 35
 
 typedef enum {
 

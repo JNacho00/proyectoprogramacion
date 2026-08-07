@@ -11,6 +11,8 @@
 #define CAMBIO_FRAME_VIDA 10
 #define FRAMES_LLAVE 6
 #define CAMBIO_FRAME_LLAVE 10
+#define FRAMES_MONEDA 3
+#define CAMBIO_FRAME_MONEDA 6
 
 ALLEGRO_BITMAP* frames_vida[FRAMES_VIDA];
 ALLEGRO_BITMAP* sprite_municion = NULL;
@@ -18,6 +20,8 @@ ALLEGRO_BITMAP* sprite_escudo = NULL;
 ALLEGRO_BITMAP* sprite_barril = NULL;
 ALLEGRO_BITMAP* frames_llave[FRAMES_LLAVE];
 ALLEGRO_BITMAP* s_explosion_barril[5];
+ALLEGRO_BITMAP* sprite_item_granada = NULL;
+ALLEGRO_BITMAP* frames_moneda[FRAMES_MONEDA];
 
 void inicializar_items(item items[]) {
     int i;
@@ -314,21 +318,35 @@ void dibujar_item(item* i, float camara_x, float camara_y) {
         }
     }
     if (i->tipo == MONEDA) {
-        al_draw_filled_rectangle(
-            i->x - camara_x,
-            i->y - camara_y,
-            i->x - camara_x + i->ancho,
-            i->y - camara_y + i->alto,
-            al_map_rgb(255, 220, 0)
-        );
+        ALLEGRO_BITMAP* sprite = frames_moneda[i->frame_actual];
+
+        if (sprite != NULL) {
+            al_draw_scaled_bitmap(
+                sprite,
+                0,
+                0,
+                al_get_bitmap_width(sprite),
+                al_get_bitmap_height(sprite),
+                i->x - camara_x,
+                i->y - camara_y,
+                i->ancho,
+                i->alto,
+                0
+            );
+        }
     }
     if (i->tipo == GRANADA) {
-        al_draw_filled_rectangle(
+        al_draw_scaled_bitmap(
+            sprite_item_granada,
+            0,
+            0,
+            al_get_bitmap_width(sprite_item_granada),
+            al_get_bitmap_height(sprite_item_granada),
             i->x - camara_x,
             i->y - camara_y,
-            i->x - camara_x + i->ancho,
-            i->y - camara_y + i->alto,
-            al_map_rgb(255, 220, 255)
+            i->ancho,
+            i->alto,
+            0
         );
     }
 
@@ -494,6 +512,24 @@ bool cargar_sprites_items(void) {
         }
     }
 
+    sprite_item_granada = al_load_bitmap("assets/armas&balas/granada.png");
+
+    if (sprite_item_granada == NULL) {
+        printf("No se pudo cargar el sprite del item granada\n");
+        return false;
+    }
+
+    frames_moneda[0] = al_load_bitmap("assets/items/moneda1.png");
+    frames_moneda[1] = al_load_bitmap("assets/items/moneda2.png");
+    frames_moneda[2] = al_load_bitmap("assets/items/moneda3.png");
+
+    for (int i = 0; i < FRAMES_MONEDA; i++) {
+        if (frames_moneda[i] == NULL) {
+            printf("No se pudo cargar sprite de moneda %d\n", i);
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -530,6 +566,18 @@ void liberar_sprites_items(void) {
             s_explosion_barril[i] = NULL;
         }
     }
+
+    if (sprite_item_granada != NULL) {
+        al_destroy_bitmap(sprite_item_granada);
+        sprite_item_granada = NULL;
+    }
+
+    for (int i = 0; i < FRAMES_MONEDA; i++) {
+        if (frames_moneda[i] != NULL) {
+            al_destroy_bitmap(frames_moneda[i]);
+            frames_moneda[i] = NULL;
+        }
+    }
 }
 
 void actualizar_animacion_item(item* i) {
@@ -554,6 +602,18 @@ void actualizar_animacion_item(item* i) {
             i->frame_actual++;
 
             if (i->frame_actual >= FRAMES_LLAVE) {
+                i->frame_actual = 0;
+            }
+        }
+    }
+    else if (i->tipo == MONEDA) {
+        i->contador_animacion++;
+
+        if (i->contador_animacion >= CAMBIO_FRAME_MONEDA) {
+            i->contador_animacion = 0;
+            i->frame_actual++;
+
+            if (i->frame_actual >= FRAMES_MONEDA) {
                 i->frame_actual = 0;
             }
         }

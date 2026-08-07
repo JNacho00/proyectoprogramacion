@@ -68,4 +68,10 @@ int cargar_mapa(const char* txt, int* llaves);
 
 int romper_caja(int x, int y, item items[]);
 
+
+void dibujar_mansion(ALLEGRO_BITMAP* mansion, float x, float y, float ancho, float alto, float camara_x, float camara_y);
+void dibujar_mansiones_nivel1(float camara_x, float camara_y);
+void dibujar_decoraciones_nivel4(float camara_x, float camara_y);
+void dibujar_portal_mapa(float camara_x, float camara_y, personaje* p);
+void romper_cajas_granada(float centro_x, float centro_y, int rango, item items[]);
 #endif

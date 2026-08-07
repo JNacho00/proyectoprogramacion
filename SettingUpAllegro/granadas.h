@@ -24,12 +24,20 @@ typedef struct {
 
     int frame_actual;
     int contador_animacion;
+    int frame_explosion;
+    int contador_explosion;
 
 } granada;
+
+typedef struct item item;
+
 
 void dibujar_granada(granada* g, float camara_x, float camara_y);
 void spawn_granadas(granada granadas[]);
 void dibujar_granadas_mapa(granada granadas[], float camara_x, float camara_y);
-void fisicas_granadas(granada granadas[]);
-
+void fisicas_granadas(granada granadas[], item items[]);
+bool cargar_sprites_granadas(void);
+void dibujar_explosion_granada(granada* g, float camara_x, float camara_y);
+void actualizar_explosion_granada(granada* g);
+void liberar_sprites_granadas(void);
 #endif 

@@ -171,7 +171,6 @@
     <ClInclude Include="items.h" />
     <ClInclude Include="mapa.h" />
     <ClInclude Include="personaje.h" />
-    <ClInclude Include="plataformas.h" />
     <ClInclude Include="ranking.h" />
     <ClInclude Include="sonidos.h" />
   </ItemGroup>
@@ -179,6 +178,7 @@
     <Text Include="mapa1.txt" />
     <Text Include="mapa2.txt" />
     <Text Include="mapa3.txt" />
+    <Text Include="mapa4.txt" />
     <Text Include="ranking.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
